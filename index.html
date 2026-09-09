@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <title>Pulse Keys</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="app">
+    <section id="menu" class="screen">
+      <div class="card">
+        <div class="logo">PULSE <span>KEYS</span></div>
+        <p class="subtitle">Ritmo rápido. Toque no tempo certo.</p>
+        <div class="loginTabs">
+          <button id="registerTab" class="tab active">Cadastro</button>
+          <button id="loginTab" class="tab">Entrar</button>
+        </div>
+
+        <div id="registerPanel" class="form">
+          <label for="registerName">Nome</label>
+          <input id="registerName" maxlength="18" autocomplete="off" placeholder="Crie seu nome">
+          <label for="registerPassword">Senha</label>
+          <input id="registerPassword" type="password" minlength="4" maxlength="10" autocomplete="off" placeholder="4 a 10 caracteres">
+          <button id="registerBtn" class="mainBtn">Criar cadastro</button>
+          <p class="small">Depois do cadastro você já vai para a seleção de dificuldade.</p>
+        </div>
+
+        <div id="loginPanel" class="form hidden">
+          <label for="loginName">Nome</label>
+          <input id="loginName" maxlength="18" autocomplete="off" placeholder="Digite seu nome">
+          <label for="loginPassword">Senha</label>
+          <input id="loginPassword" type="password" minlength="4" maxlength="10" autocomplete="off" placeholder="Digite sua senha">
+          <button id="loginBtn" class="mainBtn">Entrar</button>
+          <p id="loginInfo" class="small"></p>
+        </div>
+
+        <div id="gameSettings" class="form hidden">
+          <p id="welcomeText" class="welcome"></p>
+          <div class="row">
+            <div>
+              <label for="levelSelect">Dificuldade</label>
+              <select id="levelSelect">
+                <option value="noob">Noob</option>
+                <option value="medium" selected>Médio</option>
+                <option value="hard">Difícil</option>
+                <option value="insane">Insano</option>
+                <option value="marcus">Marcus</option>
+              </select>
+<div id="difficultyMission" class="difficultyMission"></div>
+
+            </div>
+            <div>
+              <label for="songSelect">Playlist / música</label>
+              <select id="songSelect"></select>
+            </div>
+          </div>
+          <p id="playlistInfo" class="playlistInfo"></p>
+          <div class="colorGuide">
+            <div class="colorGuideTitle">Pontuação das notas</div>
+            <div id="colorGuide" class="colorGuideGrid"></div>
+            <p class="small">Quanto mais escura ou especial a nota, maior a pontuação. Nas dificuldades maiores, notas valiosas aparecem com mais frequência.</p>
+          </div>
+          <div id="songLinks" class="songLinks"></div>
+          <p class="small">O começo de cada fase é mais lento. Depois dos primeiros 5 acertos, o ritmo acelera bastante.</p>
+          <button id="startBtn" class="mainBtn">Jogar</button>
+          <button id="shopBtn" class="secondary">🛒 Loja de habilidades</button>
+          <p id="bestInfo" class="small"></p>
+          <p class="small">3 espaços • um toque por vez • partidas curtas: o cronômetro termina a entrada de novas notas e as notas restantes terminam o level</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="game" class="screen hidden">
+      <header class="hud">
+        <div><b>PONTOS</b><span id="score">0</span></div>
+        <div class="vitalHud"><b>❤️ VIDA</b><span id="healthText">20/20</span><div class="vitalBar"><i id="healthFill"></i></div></div>
+        <div class="vitalHud"><b>🛡️ ESCUDO</b><span id="shieldText">5/5</span><div class="vitalBar shieldBar"><i id="shieldFill"></i></div></div>
+        <div><b>TEMPO</b><span id="time">0.0</span></div>
+        <div><b>FASE</b><span id="songHud">—</span><small id="speedReadout">Preparando...</small></div>
+        <div class="controls">
+          <button id="pauseBtn" class="controlBtn" aria-label="Pausar">Ⅱ</button>
+          <button id="muteBtn" class="controlBtn" aria-label="Som">🔊</button>
+        </div>
+      </header>
+      <div id="board" aria-label="Área de jogo">
+        <div class="lane" data-lane="0"></div>
+        <div class="lane" data-lane="1"></div>
+        <div class="lane" data-lane="2"></div>
+      </div>
+    </section>
+
+    <div id="pauseOverlay" class="overlay hidden">
+      <div class="overlayCard">
+        <h2>Jogo pausado</h2>
+        <div class="pauseVolumeRow"><span>🔊 Volume</span><button id="volumeBtn" class="chevronBtn" aria-label="Abrir volume">›</button></div>
+        <div id="volumePanel" class="volumePanel hidden">
+          <input id="volumeRange" type="range" min="0" max="100" value="70" aria-label="Volume da música">
+          <span id="volumeValue">70%</span>
+          <a id="volumeSongLink" href="#" target="_blank" rel="noopener noreferrer">Ouvir referência da música</a>
+        </div>
+        <button id="resumeBtn" class="mainBtn">Continuar</button>
+        <button id="restartPausedBtn" class="secondary">Reiniciar</button>
+        <button id="lobbyPausedBtn" class="secondary">Voltar ao lobby</button>
+      </div>
+    </div>
+
+    <div id="tutorialOverlay" class="overlay tutorialOverlay hidden">
+      <div class="tutorialCard">
+        <div class="tutorialBadge">COMO JOGAR</div>
+        <h2>Acerta a peça certa</h2>
+        <p id="tutorialDifficulty" class="tutorialSong">—</p>
+        <div class="keyGuide">
+          <div class="keyBox"><kbd>←</kbd><kbd>A</kbd><strong>ESQUERDA</strong><span>1º espaço</span></div>
+          <div class="keyBox"><kbd>↑</kbd><kbd>W</kbd><strong>CIMA</strong><span>2º espaço</span></div>
+          <div class="keyBox"><kbd>→</kbd><kbd>D</kbd><strong>DIREITA</strong><span>3º espaço</span></div>
+        </div>
+        <p class="tutorialTouch">🖱️ No PC: mouse ou teclado<br>📱 No celular/projetor: toque no espaço correspondente</p>
+        <p id="tutorialSpeed" class="tutorialSpeed">—</p>
+        <div class="startHint">Toque ou clique em qualquer lugar para começar</div>
+      </div>
+    </div>
+
+
+    <div id="shopOverlay" class="overlay hidden">
+      <div class="overlayCard shopCard">
+        <h2>Loja de habilidades</h2>
+        <p id="shopPoints" class="shopPoints">Pontos disponíveis: 0</p>
+        <p class="small">A loja atualiza o estoque de Reviver e Escudo a cada 5 minutos. O limite de compras reinicia junto. Melhorias ficam salvas na conta; desbloqueiam a partir do Médio.</p>
+        <div id="shopItems" class="shopItems"></div>
+        <button id="closeShopBtn" class="secondary">Voltar</button>
+      </div>
+    </div>
+    <div id="resultOverlay" class="overlay hidden">
+<div id="scoreTier" class="scoreTier"></div>
+      <div class="overlayCard">
+        <h2>Fim de jogo</h2>
+        <div id="finalScore" class="finalScore">0</div>
+        <p id="resultText"></p>
+        <button id="reviveBtn" class="secondary hidden">🔄 Usar Reviver</button>
+        <button id="againBtn" class="mainBtn">Jogar novamente</button>
+        <button id="resultLobbyBtn" class="secondary">Voltar ao lobby</button>
+      </div>
+    </div>
+  </main>
+  <script src="script.js"></script>
+</body>
+</html>
