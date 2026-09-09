@@ -235,8 +235,14 @@ function buyItem(id){
   }
   users[playerKey]=u;saveUsers(users);renderShop();
 }
-function openShop(){if(!shopUnlocked()){alert("A loja libera quando a dificuldade Médio estiver desbloqueada.");return;}renderShop();$("shopOverlay").classList.remove("hidden");}
-function closeShop(){$("shopOverlay").classList.add("hidden")}
+function openShop(){
+  if(!shopUnlocked()) return;
+  renderShop();
+  $("shopOverlay").classList.remove("hidden");
+}
+function closeShop(){
+  $("shopOverlay").classList.add("hidden")
+}
 function getUsers(){try{return JSON.parse(localStorage.getItem("pulseKeysUsers")||"{}")}catch(e){return {}}}
 function saveUsers(users){localStorage.setItem("pulseKeysUsers",JSON.stringify(users))}
 function ensureAdminAccount(){
