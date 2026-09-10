@@ -41,8 +41,8 @@
             <div>
               <label for="levelSelect">Dificuldade</label>
               <select id="levelSelect">
-                <option value="noob">Noob</option>
-                <option value="medium" selected>Médio</option>
+                <option value="noob" selected>Noob</option>
+                <option value="medium">Médio</option>
                 <option value="hard">Difícil</option>
                 <option value="insane">Insano</option>
                 <option value="marcus">Marcus</option>
@@ -68,6 +68,19 @@
           <p id="bestInfo" class="small"></p>
           <p class="small">3 espaços • um toque por vez • partidas curtas: o cronômetro termina a entrada de novas notas e as notas restantes terminam o level</p>
         </div>
+
+        <div id="adminCodePanel" class="adminCodePanel hidden">
+          <div class="adminCodeHeader">
+            <div>
+              <div class="adminCodeBadge">ADMINISTRADOR</div>
+              <h3>💻 Como o Pulse Keys funciona</h3>
+              <p class="small">Os trechos abaixo mostram as partes mais importantes do JavaScript. A ideia é entender a lógica do jogo sem precisar estudar o código inteiro.</p>
+            </div>
+            <button id="adminCodeClose" class="secondary adminCloseBtn">Fechar</button>
+          </div>
+          <div id="adminCodeList" class="adminCodeList"></div>
+        </div>
+
       </div>
     </section>
 
@@ -143,6 +156,6 @@
       </div>
     </div>
   </main>
-<script src="script.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
