@@ -10,14 +10,12 @@ let maxHealth=20,health=20,maxShield=5,shield=5,reviveMultiplier=1,gameWon=false
 let volume=Number(localStorage.getItem("pulseKeysVolume")||70);
 let tutorialActive=false,lastResultTier="Ruim";
 
-
-
-// === MISSÕES / DESBLOQUEIO DE DIFICULDADES ===
 const PK_LEVEL_ORDER=["noob","medium","hard","insane","marcus"];
 const PK_TIER_NAMES=["Ruim","Bom","Médio","Alto","Perfeito"];
 
 function pkProgressAll(){
-  try{return JSON.parse(localStorage.getItem("pulseKeysProgress")||"{}");}catch(e){return {};}
+  try{return JSON.parse(localStorage.getItem("pulseKeysProgress")||"{}");}
+  catch(e){return {};}
 }
 
 function pkSaveProgress(p){
@@ -29,7 +27,7 @@ function pkPlayerId(){
 }
 
 function pkPlayerProgress(){
-  const all=pkProgressAll(), id=pkPlayerId();
+  const all=pkProgressAll(),id=pkPlayerId();
   if(!all[id]) all[id]={};
   return {all,id,data:all[id]};
 }
@@ -40,22 +38,19 @@ function pkTierFromAccuracy(){
   const misses=Number(window.pkMissNotes||0);
   const ratio=hits/total;
 
-  if(total>0 && hits===total && misses===0) return "Perfeito";
-  if(ratio>=0.82) return "Alto";
-  if(ratio>=0.62) return "Médio";
-  if(ratio>=0.38) return "Bom";
+  if(total>0 && hits===total && misses===0)return "Perfeito";
+  if(ratio>=0.82)return "Alto";
+  if(ratio>=0.62)return "Médio";
+  if(ratio>=0.38)return "Bom";
   return "Ruim";
 }
 
 function pkRecordResult(level,tier){
   const {all,id,data}=pkPlayerProgress();
 
-  data[level] ||= {
-    perfects:0,
-    bestTier:"Ruim"
-  };
+  data[level] ||= {perfects:0,bestTier:"Ruim"};
 
-  if(tier==="Perfeito") data[level].perfects++;
+  if(tier==="Perfeito")data[level].perfects++;
 
   if(
     PK_TIER_NAMES.indexOf(tier)>
@@ -68,11 +63,11 @@ function pkRecordResult(level,tier){
 }
 
 function pkUnlocked(level){
-  if(playerKey==="arthur") return true;
+  if(playerKey==="arthur")return true;
 
   const i=PK_LEVEL_ORDER.indexOf(level);
 
-  if(i<=0) return true;
+  if(i<=0)return true;
 
   const prev=pkPlayerProgress().data[PK_LEVEL_ORDER[i-1]];
 
@@ -86,7 +81,7 @@ function pkUnlocked(level){
 function pkUnlockText(level){
   const i=PK_LEVEL_ORDER.indexOf(level);
 
-  if(i<=0) return "Disponível";
+  if(i<=0)return "Disponível";
 
   const prev=PK_LEVEL_ORDER[i-1];
   const p=pkPlayerProgress().data[prev];
@@ -99,46 +94,17 @@ function pkUnlockText(level){
 }
 
 
-
-// === SISTEMA DE CORES E PONTUAÇÃO ===
+/* =========================================================
+   SISTEMA DE CORES E PONTUAÇÃO
+========================================================= */
 
 const PK_NOTE_SCORES=[
-  {
-    name:"Verde",
-    color:"#35d07f",
-    points:1,
-    weight:38
-  },
-  {
-    name:"Amarelo",
-    color:"#ffd43b",
-    points:2,
-    weight:25
-  },
-  {
-    name:"Azul",
-    color:"#4dabf7",
-    points:3,
-    weight:16
-  },
-  {
-    name:"Roxo",
-    color:"#b56cff",
-    points:5,
-    weight:10
-  },
-  {
-    name:"Branco",
-    color:"#f8fbff",
-    points:8,
-    weight:6
-  },
-  {
-    name:"Preto",
-    color:"#252525",
-    points:10,
-    weight:5
-  }
+  {name:"Verde",color:"#35d07f",points:1,weight:38},
+  {name:"Amarelo",color:"#ffd43b",points:2,weight:25},
+  {name:"Azul",color:"#4dabf7",points:3,weight:16},
+  {name:"Roxo",color:"#b56cff",points:5,weight:10},
+  {name:"Branco",color:"#f8fbff",points:8,weight:6},
+  {name:"Preto",color:"#252525",points:10,weight:5}
 ];
 
 const PK_LEVEL_COLOR_BOOST={
@@ -158,18 +124,20 @@ function pickNoteStyle(){
   }));
 
   const total=entries.reduce((a,e)=>a+e.w,0);
-
   let r=Math.random()*total;
 
   for(const e of entries){
     r-=e.w;
-    if(r<=0) return e.n;
+    if(r<=0)return e.n;
   }
 
   return entries[0].n;
 }
 
 
+/* =========================================================
+   DIFICULDADES
+========================================================= */
 
 const levels={
   noob:{
@@ -209,11 +177,11 @@ const levels={
 };
 
 
-
-// === PLAYLISTS ===
+/* =========================================================
+   PLAYLISTS
+========================================================= */
 
 const playlists={
-
   noob:[
     {
       key:"glorious",
@@ -223,7 +191,6 @@ const playlists={
       youtube:"https://www.youtube.com/results?search_query=Waterflame+Glorious+Morning",
       tag:"calma • entrada suave"
     },
-
     {
       key:"crystallize",
       title:"Crystallize — Creo",
@@ -232,7 +199,6 @@ const playlists={
       youtube:"https://www.youtube.com/results?search_query=Creo+Crystallize",
       tag:"melódica • tranquila"
     },
-
     {
       key:"time-machine",
       title:"Time Machine — Waterflame",
@@ -241,7 +207,6 @@ const playlists={
       youtube:"https://www.youtube.com/results?search_query=Waterflame+Time+Machine",
       tag:"leve • aventura"
     },
-
     {
       key:"skyward",
       title:"Skyward — Creo",
@@ -250,7 +215,6 @@ const playlists={
       youtube:"https://www.youtube.com/results?search_query=Creo+Skyward",
       tag:"suave • espacial"
     },
-
     {
       key:"sunrise",
       title:"Sunrise — Waterflame",
@@ -270,7 +234,6 @@ const playlists={
       youtube:"https://www.youtube.com/results?search_query=Creo+Sphere",
       tag:"ritmo moderado"
     },
-
     {
       key:"dimension",
       title:"Dimension — Creo",
@@ -279,7 +242,6 @@ const playlists={
       youtube:"https://www.youtube.com/results?search_query=Creo+Dimension",
       tag:"mais pulsante"
     },
-
     {
       key:"glome",
       title:"Glome — Creo",
@@ -288,7 +250,6 @@ const playlists={
       youtube:"https://www.youtube.com/results?search_query=Creo+Glome",
       tag:"eletrônica • crescente"
     },
-
     {
       key:"arcade-punk",
       title:"Arcade Punk — Waterflame",
@@ -297,7 +258,6 @@ const playlists={
       youtube:"https://www.youtube.com/results?search_query=Waterflame+Arcade+Punk",
       tag:"arcade • energético"
     },
-
     {
       key:"press-start",
       title:"Press Start — MDK",
@@ -317,7 +277,6 @@ const playlists={
       youtube:"https://www.youtube.com/results?search_query=Creo+Exosphere",
       tag:"eletrônica • acelera"
     },
-
     {
       key:"endgame",
       title:"Endgame — Waterflame",
@@ -326,7 +285,6 @@ const playlists={
       youtube:"https://www.youtube.com/results?search_query=Waterflame+Endgame",
       tag:"chiptune • rápido"
     },
-
     {
       key:"carnivores",
       title:"Carnivores — Creo",
@@ -335,7 +293,6 @@ const playlists={
       youtube:"https://www.youtube.com/results?search_query=Creo+Carnivores",
       tag:"rápida • intensa"
     },
-
     {
       key:"jumper",
       title:"Jumper — Waterflame",
@@ -344,7 +301,6 @@ const playlists={
       youtube:"https://www.youtube.com/results?search_query=Waterflame+Jumper",
       tag:"arcade • veloz"
     },
-
     {
       key:"jelly-castle",
       title:"Jelly Castle — MDK",
@@ -364,7 +320,6 @@ const playlists={
       youtube:"https://www.youtube.com/results?search_query=Waterflame+Sky+Fortress",
       tag:"épica • muito rápida"
     },
-
     {
       key:"lightspeed",
       title:"Lightspeed — Waterflame",
@@ -373,7 +328,6 @@ const playlists={
       youtube:"https://www.youtube.com/results?search_query=Waterflame+Lightspeed",
       tag:"trance • alta energia"
     },
-
     {
       key:"theory-of-everything",
       title:"Theory of Everything — DJ-Nate",
@@ -382,7 +336,6 @@ const playlists={
       youtube:"https://www.youtube.com/results?search_query=DJ-Nate+Theory+of+Everything",
       tag:"eletrônica • frenética"
     },
-
     {
       key:"blast-processing",
       title:"Blast Processing — Waterflame",
@@ -391,7 +344,6 @@ const playlists={
       youtube:"https://www.youtube.com/results?search_query=Waterflame+Blast+Processing",
       tag:"arcade • acelerada"
     },
-
     {
       key:"surface",
       title:"Surface — Creo",
@@ -411,7 +363,6 @@ const playlists={
       youtube:"https://www.youtube.com/watch?v=BuPmq7yjDnI",
       tag:"elétrica • frenética"
     },
-
     {
       key:"nautilus",
       title:"Nautilus — Creo",
@@ -420,7 +371,6 @@ const playlists={
       youtube:"https://www.youtube.com/results?search_query=Creo+Nautilus",
       tag:"build-up • pancadão"
     },
-
     {
       key:"press-start-extreme",
       title:"Press Start — MDK",
@@ -429,7 +379,6 @@ const playlists={
       youtube:"https://www.youtube.com/results?search_query=MDK+Press+Start",
       tag:"arcade • extrema"
     },
-
     {
       key:"powerless",
       title:"Powerless — Creo",
@@ -438,7 +387,6 @@ const playlists={
       youtube:"https://www.youtube.com/results?search_query=Creo+Powerless",
       tag:"energia • brutal"
     },
-
     {
       key:"ghost",
       title:"Ghost — Creo",
@@ -451,8 +399,9 @@ const playlists={
 };
 
 
-
-// === LOJA ===
+/* =========================================================
+   LOJA
+========================================================= */
 
 const SHOP_ITEMS={
   double:{
@@ -509,14 +458,12 @@ function randomStock(limit){
 
 function refreshShopIfNeeded(u){
   u.shop=u.shop||{};
-
   u.shop.double=!!u.shop.double;
   u.shop.revive=Number(u.shop.revive||0);
   u.shop.shield=Number(u.shop.shield||0);
 
   u.shop.stock=u.shop.stock||{};
   u.shop.purchases=u.shop.purchases||{};
-
   u.shop.upgrades=u.shop.upgrades||{
     health:0,
     shield:0
@@ -536,14 +483,8 @@ function refreshShopIfNeeded(u){
   const now=Date.now();
 
   if(!refreshAt || now>=refreshAt){
-
-    u.shop.stock.revive=randomStock(
-      SHOP_ITEMS.revive.limit
-    );
-
-    u.shop.stock.shield=randomStock(
-      SHOP_ITEMS.shield.limit
-    );
+    u.shop.stock.revive=randomStock(SHOP_ITEMS.revive.limit);
+    u.shop.stock.shield=randomStock(SHOP_ITEMS.shield.limit);
 
     u.shop.purchases.revive=0;
     u.shop.purchases.shield=0;
@@ -572,7 +513,7 @@ function shopUnlocked(){
   return playerKey==="arthur" || pkUnlocked("medium");
 }
 
-function awardCoins(multiplier=1){
+function awardCoins(){
   const users=getUsers();
   const u=users[playerKey];
 
@@ -584,9 +525,9 @@ function awardCoins(multiplier=1){
     (u.shop&&u.shop.double)?2:1;
 
   const finalMultiplier=
-    reviveMultiplier>1
-      ?reviveMultiplier
-      :baseMultiplier;
+    reviveMultiplier>1?
+      reviveMultiplier:
+      baseMultiplier;
 
   u.coins=
     Number(u.coins||0)+
@@ -608,13 +549,12 @@ function shopRefreshText(u){
 
   const sec=Math.ceil(left/1000);
 
-  return sec>0
-    ?`Atualiza em ${Math.floor(sec/60)}:${String(sec%60).padStart(2,"0")}`
-    :"Atualizando...";
+  return sec>0?
+    `Atualiza em ${Math.floor(sec/60)}:${String(sec%60).padStart(2,"0")}`:
+    "Atualizando...";
 }
 
 function upgradeStats(u){
-
   const h=Math.min(
     5,
     Number(u.shop?.upgrades?.health||0)
@@ -635,7 +575,6 @@ function upgradeStats(u){
 }
 
 function renderShop(){
-
   const box=$("shopItems");
   const u=shopState();
 
@@ -648,18 +587,13 @@ function renderShop(){
     `Pontos disponíveis: ${u.coins}`;
 
   const upgrades=`
-
-    <div class="shopSectionTitle">
-      🛡️ Melhorias
-    </div>
+    <div class="shopSectionTitle">🛡️ Melhorias</div>
 
     <div class="upgradeInfo">
       No <b>${levels[levelKey].label}</b>,
-      você pode ter até
-      <b>${cap}</b>
+      você pode ter até <b>${cap}</b>
       melhoria${cap===1?'':'s'}
-      comprada${cap===1?'':'s'}
-      no total.
+      comprada${cap===1?'':'s'} no total.
       As melhorias ficam salvas na conta.
     </div>
 
@@ -682,14 +616,10 @@ function renderShop(){
 
   const items=
     Object.entries(SHOP_ITEMS)
-      .filter(([id])=>
-        id!=="healthUp"&&
-        id!=="shieldUp"
-      )
+      .filter(([id])=>id!=="healthUp"&&id!=="shieldUp")
       .map(([id,it])=>{
 
         if(id==="double"){
-
           const disabled=
             !shopUnlocked()||
             u.coins<it.cost||
@@ -697,17 +627,14 @@ function renderShop(){
 
           return `
             <div class="shopItem">
-
               <div>
                 <b>${it.name}</b>
-
                 <span>${it.desc}</span>
-
                 <small>
                   ${
-                    u.shop.double
-                      ?"Compra permanente já feita"
-                      :"Compra única • não volta para a loja"
+                    u.shop.double?
+                    "Compra permanente já feita":
+                    "Compra única • não volta para a loja"
                   }
                 </small>
               </div>
@@ -719,16 +646,17 @@ function renderShop(){
               >
                 ${it.cost} pts
               </button>
-
             </div>
           `;
         }
 
-        const stock=
-          Number(u.shop.stock[id]||0);
+        const stock=Number(
+          u.shop.stock[id]||0
+        );
 
-        const purchases=
-          Number(u.shop.purchases[id]||0);
+        const purchases=Number(
+          u.shop.purchases[id]||0
+        );
 
         const limit=it.limit;
 
@@ -740,16 +668,12 @@ function renderShop(){
 
         return `
           <div class="shopItem">
-
             <div>
               <b>${it.name}</b>
-
               <span>${it.desc}</span>
-
               <small>
                 Compras: ${purchases}/${limit}
-                •
-                Unidades: ${stock}
+                • Unidades: ${stock}
               </small>
             </div>
 
@@ -760,26 +684,19 @@ function renderShop(){
             >
               ${it.cost} pts
             </button>
-
           </div>
         `;
-
-      }).join("");
+      })
+      .join("");
 
   box.innerHTML=
     upgrades+
-    `<div class="shopSectionTitle consumablesTitle">
-      🎒 Itens
-    </div>`+
+    `<div class="shopSectionTitle consumablesTitle">🎒 Itens</div>`+
     items+
-    `<p class="shopRefresh">
-      🔄 ${shopRefreshText(u)}
-    </p>`;
+    `<p class="shopRefresh">🔄 ${shopRefreshText(u)}</p>`;
 
-  box
-    .querySelectorAll(".shopBuy")
+  box.querySelectorAll(".shopBuy")
     .forEach(btn=>{
-
       btn.addEventListener(
         "pointerdown",
         e=>{
@@ -791,7 +708,6 @@ function renderShop(){
           );
         }
       );
-
     });
 }
 
@@ -802,7 +718,6 @@ function renderUpgradeItem(
   cap,
   u
 ){
-
   const total=
     Number(u.shop.upgrades.health||0)+
     Number(u.shop.upgrades.shield||0);
@@ -820,23 +735,16 @@ function renderUpgradeItem(
     u.coins<cost;
 
   const effect=
-    kind==="health"
-      ?`❤️ ${20+level*5} → ${20+next*5} HP`
-      :`🛡️ ${5+level*3} → ${5+next*3}`;
+    kind==="health"?
+      `❤️ ${20+level*5} → ${20+next*5} HP`:
+      `🛡️ ${5+level*3} → ${5+next*3}`;
 
   return `
     <div class="shopItem upgradeItem">
-
       <div>
         <b>${it.name} ${level}/5</b>
-
         <span>${it.desc}</span>
-
-        <small>
-          ${effect}
-          •
-          Limite ${cap}
-        </small>
+        <small>${effect} • Limite ${cap}</small>
       </div>
 
       <button
@@ -845,20 +753,18 @@ function renderUpgradeItem(
         ${disabled?'disabled':''}
       >
         ${
-          atMax
-            ?"Máximo"
-            :atCap
-              ?"Limite"
-              :cost+" pts"
+          atMax?
+          'Máximo':
+          atCap?
+          'Limite':
+          cost+' pts'
         }
       </button>
-
     </div>
   `;
 }
 
 function buyItem(id){
-
   const users=getUsers();
   const u=users[playerKey];
 
@@ -872,9 +778,9 @@ function buyItem(id){
   if(id==="healthUp"||id==="shieldUp"){
 
     const kind=
-      id==="healthUp"
-        ?"health"
-        :"shield";
+      id==="healthUp"?
+      "health":
+      "shield";
 
     const level=
       Number(u.shop.upgrades?.[kind]||0);
@@ -920,15 +826,11 @@ function buyItem(id){
       )return;
 
       u.shop.stock[id]=stock-1;
-
-      u.shop.purchases[id]=
-        purchases+1;
-
+      u.shop.purchases[id]=purchases+1;
       u.shop[id]=
         Number(u.shop[id]||0)+1;
 
     }else{
-
       u.shop.double=true;
     }
 
@@ -937,35 +839,27 @@ function buyItem(id){
 
   users[playerKey]=u;
   saveUsers(users);
-
   renderShop();
 }
 
-
-
-// CORREÇÃO:
-// A loja bloqueada não mostra mais alerta repetidamente.
 function openShop(){
-
   if(!shopUnlocked())return;
 
   renderShop();
 
-  $("shopOverlay")
-    .classList
-    .remove("hidden");
+  $("shopOverlay").classList.remove("hidden");
 }
 
 function closeShop(){
-  $("shopOverlay")
-    .classList
-    .add("hidden");
+  $("shopOverlay").classList.add("hidden");
 }
 
 
+/* =========================================================
+   USUÁRIOS
+========================================================= */
 
 function getUsers(){
-
   try{
     return JSON.parse(
       localStorage.getItem("pulseKeysUsers")||"{}"
@@ -982,15 +876,8 @@ function saveUsers(users){
   );
 }
 
-
-
-// CORREÇÃO:
-// Preserva os dados antigos da conta Arthur,
-// incluindo moedas, melhorias e itens.
 function ensureAdminAccount(){
-
   const users=getUsers();
-
   const old=users.arthur||{};
 
   users.arthur={
@@ -1006,25 +893,334 @@ function ensureAdminAccount(){
 
 ensureAdminAccount();
 
-
-
 function userKey(name){
   return name.trim().toLowerCase();
 }
 
 
+/* =========================================================
+   MÚSICAS PERSONALIZADAS
+========================================================= */
 
 function currentSong(){
-
-  return playlists[levelKey]
-    .find(s=>s.key===songKey)
-    ||
-    playlists[levelKey][0];
+  return pkAllSongsForLevel()
+    .find(s=>s.key===songKey)||
+    pkAllSongsForLevel()[0];
 }
 
-function updatePlaylist(){
+function pkCustomSongs(){
+  try{
+    return JSON.parse(
+      localStorage.getItem("pulseKeysCustomSongs")||"[]"
+    );
+  }catch(e){
+    return [];
+  }
+}
 
-  const list=playlists[levelKey];
+function pkSaveCustomSongs(list){
+  localStorage.setItem(
+    "pulseKeysCustomSongs",
+    JSON.stringify(list)
+  );
+}
+
+function pkYoutubeId(url){
+  try{
+    const u=new URL(url);
+
+    if(u.hostname.includes("youtu.be")){
+      return u.pathname.slice(1).split("/")[0];
+    }
+
+    if(u.hostname.includes("youtube.com")){
+
+      if(u.pathname==="/watch"){
+        return u.searchParams.get("v");
+      }
+
+      const m=u.pathname.match(
+        /\/(?:embed|shorts|live)\/([^/?]+)/
+      );
+
+      if(m)return m[1];
+    }
+
+  }catch(e){}
+
+  return null;
+}
+
+function pkCustomSongsForLevel(){
+  return pkCustomSongs()
+    .filter(s=>s.level===levelKey);
+}
+
+function pkCustomSongByKey(key){
+  return pkCustomSongs()
+    .find(s=>s.key===key)||null;
+}
+
+function pkEnsureCustomMusicUI(){
+  if(document.getElementById("pkCustomMusicBox"))return;
+
+  const host=
+    document.getElementById("songSelect")?.parentElement?.parentElement||
+    document.getElementById("songSelect")?.parentElement;
+
+  if(!host)return;
+
+  const box=document.createElement("div");
+
+  box.id="pkCustomMusicBox";
+  box.className="customMusicBox";
+
+  box.innerHTML=`
+    <div class="shopSectionTitle">🎵 Sua música</div>
+
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+
+      <input
+        id="pkCustomMusicName"
+        type="text"
+        maxlength="50"
+        placeholder="Nome da música (opcional)"
+        style="flex:1;min-width:180px"
+      >
+
+      <input
+        id="pkCustomMusicUrl"
+        type="url"
+        placeholder="Cole o link do YouTube aqui"
+        style="flex:2;min-width:240px"
+      >
+
+      <button
+        id="pkAddCustomMusic"
+        type="button"
+      >
+        Adicionar música
+      </button>
+
+    </div>
+
+    <small style="display:block;margin-top:6px;opacity:.8">
+      Aceita links do YouTube, incluindo youtu.be.
+      A música fica salva neste navegador.
+    </small>
+
+    <div
+      id="pkCustomMusicList"
+      style="margin-top:8px"
+    ></div>
+  `;
+
+  host.parentNode.insertBefore(
+    box,
+    host.nextSibling
+  );
+
+  document
+    .getElementById("pkAddCustomMusic")
+    .addEventListener(
+      "pointerdown",
+      e=>{
+        e.preventDefault();
+        pkAddCustomMusic();
+      }
+    );
+
+  pkRenderCustomMusicList();
+}
+
+function pkAddCustomMusic(){
+  const input=
+    document.getElementById("pkCustomMusicUrl");
+
+  const nameInput=
+    document.getElementById("pkCustomMusicName");
+
+  if(!input)return;
+
+  const url=input.value.trim();
+  const id=pkYoutubeId(url);
+
+  if(!id){
+    alert("Cole um link válido do YouTube.");
+    return;
+  }
+
+  const list=pkCustomSongs();
+
+  if(list.some(s=>s.youtubeId===id)){
+    alert("Essa música já foi adicionada.");
+    return;
+  }
+
+  const title=
+    (nameInput.value.trim()||"Minha música")+
+    " — YouTube";
+
+  const item={
+    key:"custom-"+Date.now(),
+    title,
+    bpm:140,
+    notes:[
+      261.63,
+      329.63,
+      392,
+      523.25,
+      392,
+      329.63,
+      293.66,
+      392
+    ],
+    youtube:"https://www.youtube.com/watch?v="+id,
+    youtubeId:id,
+    level:levelKey,
+    tag:"🎵 personalizada"
+  };
+
+  list.push(item);
+
+  pkSaveCustomSongs(list);
+
+  input.value="";
+  nameInput.value="";
+
+  songKey=item.key;
+
+  updatePlaylist();
+  pkRenderCustomMusicList();
+
+  alert(
+    "Música adicionada! Ela ficou disponível nesta dificuldade."
+  );
+}
+
+function pkRenderCustomMusicList(){
+  const box=
+    document.getElementById("pkCustomMusicList");
+
+  if(!box)return;
+
+  const list=pkCustomSongsForLevel();
+
+  box.innerHTML=
+    list.length?
+      list.map(s=>`
+        <div
+          style="
+            display:flex;
+            gap:8px;
+            align-items:center;
+            margin:4px 0
+          "
+        >
+          <span style="flex:1">${s.title}</span>
+
+          <button
+            type="button"
+            class="pkRemoveCustom"
+            data-key="${s.key}"
+          >
+            Remover
+          </button>
+        </div>
+      `).join(""):
+      "<small>Nenhuma música personalizada nesta dificuldade.</small>";
+
+  box
+    .querySelectorAll(".pkRemoveCustom")
+    .forEach(b=>{
+      b.addEventListener(
+        "pointerdown",
+        e=>{
+          e.preventDefault();
+          pkRemoveCustomMusic(
+            b.dataset.key
+          );
+        }
+      );
+    });
+}
+
+function pkRemoveCustomMusic(key){
+  const list=
+    pkCustomSongs()
+      .filter(s=>s.key!==key);
+
+  pkSaveCustomSongs(list);
+
+  if(songKey===key){
+    songKey=playlists[levelKey][0].key;
+  }
+
+  updatePlaylist();
+  pkRenderCustomMusicList();
+}
+
+function pkAllSongsForLevel(){
+  return playlists[levelKey]
+    .concat(pkCustomSongsForLevel());
+}
+
+
+/* =========================================================
+   YOUTUBE
+========================================================= */
+
+function pkStartYoutubeMusic(song){
+  let frame=
+    document.getElementById("pkYoutubePlayer");
+
+  if(!frame){
+    frame=document.createElement("iframe");
+
+    frame.id="pkYoutubePlayer";
+
+    frame.allow=
+      "autoplay; encrypted-media";
+
+    frame.style.cssText=
+      "position:fixed;"+
+      "left:-9999px;"+
+      "top:-9999px;"+
+      "width:2px;"+
+      "height:2px;"+
+      "border:0;"+
+      "opacity:0;"+
+      "pointer-events:none";
+
+    document.body.appendChild(frame);
+  }
+
+  if(song&&song.youtubeId){
+
+    frame.src=
+      "https://www.youtube.com/embed/"+
+      encodeURIComponent(song.youtubeId)+
+      "?autoplay=1&controls=0&loop=1&playlist="+
+      encodeURIComponent(song.youtubeId);
+  }
+}
+
+function pkStopYoutubeMusic(){
+  const frame=
+    document.getElementById("pkYoutubePlayer");
+
+  if(frame){
+    frame.src="about:blank";
+  }
+}
+
+
+/* =========================================================
+   PLAYLIST
+========================================================= */
+
+function updatePlaylist(){
+  const list=pkAllSongsForLevel();
 
   if(!list.some(s=>s.key===songKey)){
     songKey=list[0].key;
@@ -1033,340 +1229,316 @@ function updatePlaylist(){
   const select=$("songSelect");
 
   select.innerHTML=
-    list
-      .map(s=>
-        `<option value="${s.key}">
-          ${s.title}
-        </option>`
-      )
-      .join("");
+    list.map(s=>
+      `<option value="${s.key}">
+        ${s.title}
+      </option>`
+    ).join("");
 
   select.value=songKey;
 
   $("playlistInfo").textContent=
-    `${levels[levelKey].label}: ${
-      list
-        .map(s=>s.title.split(" — ")[0])
-        .join(" • ")
-    }`;
+    `${levels[levelKey].label}: `+
+    list
+      .map(s=>s.title.split(" — ")[0])
+      .join(" • ");
 
   $("songLinks").innerHTML=
-    list
-      .map(s=>
-        `<div class="songLinkRow">
-          <span>${s.tag}</span>
-          <a
-            href="${s.youtube}"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            ${s.title}
-          </a>
-        </div>`
-      )
-      .join("");
+    list.map(s=>`
+      <div class="songLinkRow">
+        <span>${s.tag}</span>
+        <a
+          href="${s.youtube}"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          ${s.title}
+        </a>
+      </div>
+    `).join("");
+
+  pkEnsureCustomMusicUI();
+  pkRenderCustomMusicList();
 }
 
 
+/* =========================================================
+   LOGIN / REGISTRO
+========================================================= */
 
 function showTab(tab){
-
   const reg=tab==="register";
 
   $("registerPanel")
-    .classList
-    .toggle("hidden",!reg);
+    .classList.toggle("hidden",!reg);
 
   $("loginPanel")
-    .classList
-    .toggle("hidden",reg);
+    .classList.toggle("hidden",reg);
 
   $("registerTab")
-    .classList
-    .toggle("active",reg);
+    .classList.toggle("active",reg);
 
   $("loginTab")
-    .classList
-    .toggle("active",!reg);
+    .classList.toggle("active",!reg);
 }
 
-$("registerTab")
-  .addEventListener(
-    "pointerdown",
-    e=>{
-      e.preventDefault();
-      showTab("register");
+$("registerTab").addEventListener(
+  "pointerdown",
+  e=>{
+    e.preventDefault();
+    showTab("register");
+  }
+);
+
+$("loginTab").addEventListener(
+  "pointerdown",
+  e=>{
+    e.preventDefault();
+    showTab("login");
+  }
+);
+
+$("registerBtn").addEventListener(
+  "pointerdown",
+  e=>{
+    e.preventDefault();
+
+    const name=
+      $("registerName").value.trim();
+
+    const pass=
+      $("registerPassword").value.trim();
+
+    if(!name){
+      alert("Digite um nome.");
+      return;
     }
-  );
 
-$("loginTab")
-  .addEventListener(
-    "pointerdown",
-    e=>{
-      e.preventDefault();
-      showTab("login");
-    }
-  );
-
-
-
-$("registerBtn")
-  .addEventListener(
-    "pointerdown",
-    e=>{
-
-      e.preventDefault();
-
-      const name=
-        $("registerName").value.trim();
-
-      const pass=
-        $("registerPassword").value.trim();
-
-      if(!name){
-        alert("Digite um nome.");
-        return;
-      }
-
-      if(!/^\d{4,6}$/.test(pass)){
-        alert(
-          "A senha deve ter de 4 a 6 números."
-        );
-        return;
-      }
-
-      const users=getUsers();
-      const key=userKey(name);
-
-      if(users[key]){
-        alert(
-          "Esse nome já está cadastrado. Use a aba Entrar."
-        );
-        return;
-      }
-
-      users[key]={
-        name,
-        password:pass,
-        best:0
-      };
-
-      saveUsers(users);
-
-      player=users[key].name;
-      playerKey=key;
-
-      localStorage.setItem(
-        "pulseKeysPlayer",
-        player
+    if(!/^\d{4,6}$/.test(pass)){
+      alert(
+        "A senha deve ter de 4 a 6 números."
       );
+      return;
+    }
 
-      localStorage.setItem(
-        "pulseKeysPlayerKey",
-        playerKey
+    const users=getUsers();
+    const key=userKey(name);
+
+    if(users[key]){
+      alert(
+        "Esse nome já está cadastrado. Use a aba Entrar."
       );
-
-      enterGameMenu();
+      return;
     }
-  );
 
+    users[key]={
+      name,
+      password:pass,
+      best:0
+    };
 
+    saveUsers(users);
 
-$("loginBtn")
-  .addEventListener(
-    "pointerdown",
-    e=>{
+    player=users[key].name;
+    playerKey=key;
 
-      e.preventDefault();
+    localStorage.setItem(
+      "pulseKeysPlayer",
+      player
+    );
 
-      const name=
-        $("loginName").value.trim();
+    localStorage.setItem(
+      "pulseKeysPlayerKey",
+      playerKey
+    );
 
-      const pass=
-        $("loginPassword").value.trim();
+    enterGameMenu();
+  }
+);
 
-      const users=getUsers();
-      const key=userKey(name);
+$("loginBtn").addEventListener(
+  "pointerdown",
+  e=>{
+    e.preventDefault();
 
-      if(
-        !users[key]||
-        users[key].password!==pass
-      ){
-        $("loginInfo").textContent=
-          "Nome ou senha incorretos.";
-        return;
-      }
+    const name=
+      $("loginName").value.trim();
 
-      player=users[key].name;
-      playerKey=key;
+    const pass=
+      $("loginPassword").value.trim();
 
-      localStorage.setItem(
-        "pulseKeysPlayer",
-        player
-      );
+    const users=getUsers();
+    const key=userKey(name);
 
-      localStorage.setItem(
-        "pulseKeysPlayerKey",
-        playerKey
-      );
+    if(
+      !users[key]||
+      users[key].password!==pass
+    ){
+      $("loginInfo").textContent=
+        "Nome ou senha incorretos.";
 
-      $("loginInfo").textContent="";
-
-      enterGameMenu();
+      return;
     }
-  );
+
+    player=users[key].name;
+    playerKey=key;
+
+    localStorage.setItem(
+      "pulseKeysPlayer",
+      player
+    );
+
+    localStorage.setItem(
+      "pulseKeysPlayerKey",
+      playerKey
+    );
+
+    $("loginInfo").textContent="";
+
+    enterGameMenu();
+  }
+);
 
 
+/* =========================================================
+   CONTROLES DO MENU
+========================================================= */
 
-$("levelSelect")
-  .addEventListener(
-    "change",
-    ()=>{
-      levelKey=$("levelSelect").value;
-      updatePlaylist();
+$("levelSelect").addEventListener(
+  "change",
+  ()=>{
+    levelKey=$("levelSelect").value;
+    updatePlaylist();
+  }
+);
+
+$("songSelect").addEventListener(
+  "change",
+  ()=>{
+    songKey=$("songSelect").value;
+  }
+);
+
+$("startBtn").addEventListener(
+  "pointerdown",
+  e=>{
+    e.preventDefault();
+    startGame();
+  }
+);
+
+$("pauseBtn").addEventListener(
+  "pointerdown",
+  e=>{
+    e.preventDefault();
+    togglePause();
+  }
+);
+
+$("resumeBtn").addEventListener(
+  "pointerdown",
+  e=>{
+    e.preventDefault();
+    resumeGame();
+  }
+);
+
+$("restartPausedBtn").addEventListener(
+  "pointerdown",
+  e=>{
+    e.preventDefault();
+    startGame();
+  }
+);
+
+$("lobbyPausedBtn").addEventListener(
+  "pointerdown",
+  e=>{
+    e.preventDefault();
+    goToLobby();
+  }
+);
+
+$("againBtn").addEventListener(
+  "pointerdown",
+  e=>{
+    e.preventDefault();
+    startGame();
+  }
+);
+
+$("resultLobbyBtn").addEventListener(
+  "pointerdown",
+  e=>{
+    e.preventDefault();
+    goToLobby();
+  }
+);
+
+$("muteBtn").addEventListener(
+  "pointerdown",
+  e=>{
+    e.preventDefault();
+    toggleMute();
+  }
+);
+
+$("volumeBtn").addEventListener(
+  "pointerdown",
+  e=>{
+    e.preventDefault();
+    toggleVolumePanel();
+  }
+);
+
+$("volumeRange").addEventListener(
+  "input",
+  e=>{
+    setVolume(Number(e.target.value));
+  }
+);
+
+$("shopBtn").addEventListener(
+  "pointerdown",
+  e=>{
+    e.preventDefault();
+    openShop();
+  }
+);
+
+$("reviveBtn").addEventListener(
+  "pointerdown",
+  e=>{
+    e.preventDefault();
+    useRevive();
+  }
+);
+
+$("closeShopBtn").addEventListener(
+  "pointerdown",
+  e=>{
+    e.preventDefault();
+    closeShop();
+  }
+);
+
+$("tutorialOverlay").addEventListener(
+  "pointerdown",
+  e=>{
+    e.preventDefault();
+
+    if(tutorialActive){
+      beginActualGame();
     }
-  );
-
-$("songSelect")
-  .addEventListener(
-    "change",
-    ()=>{
-      songKey=$("songSelect").value;
-    }
-  );
-
-$("startBtn")
-  .addEventListener(
-    "pointerdown",
-    e=>{
-      e.preventDefault();
-      startGame();
-    }
-  );
-
-$("pauseBtn")
-  .addEventListener(
-    "pointerdown",
-    e=>{
-      e.preventDefault();
-      togglePause();
-    }
-  );
-
-$("resumeBtn")
-  .addEventListener(
-    "pointerdown",
-    e=>{
-      e.preventDefault();
-      resumeGame();
-    }
-  );
-
-$("restartPausedBtn")
-  .addEventListener(
-    "pointerdown",
-    e=>{
-      e.preventDefault();
-      startGame();
-    }
-  );
-
-$("lobbyPausedBtn")
-  .addEventListener(
-    "pointerdown",
-    e=>{
-      e.preventDefault();
-      goToLobby();
-    }
-  );
-
-$("againBtn")
-  .addEventListener(
-    "pointerdown",
-    e=>{
-      e.preventDefault();
-      startGame();
-    }
-  );
-
-$("resultLobbyBtn")
-  .addEventListener(
-    "pointerdown",
-    e=>{
-      e.preventDefault();
-      goToLobby();
-    }
-  );
-
-$("muteBtn")
-  .addEventListener(
-    "pointerdown",
-    e=>{
-      e.preventDefault();
-      toggleMute();
-    }
-  );
-
-$("volumeBtn")
-  .addEventListener(
-    "pointerdown",
-    e=>{
-      e.preventDefault();
-      toggleVolumePanel();
-    }
-  );
-
-$("volumeRange")
-  .addEventListener(
-    "input",
-    e=>{
-      setVolume(Number(e.target.value));
-    }
-  );
-
-$("shopBtn")
-  .addEventListener(
-    "pointerdown",
-    e=>{
-      e.preventDefault();
-      openShop();
-    }
-  );
-
-$("reviveBtn")
-  .addEventListener(
-    "pointerdown",
-    e=>{
-      e.preventDefault();
-      useRevive();
-    }
-  );
-
-$("closeShopBtn")
-  .addEventListener(
-    "pointerdown",
-    e=>{
-      e.preventDefault();
-      closeShop();
-    }
-  );
-
-$("tutorialOverlay")
-  .addEventListener(
-    "pointerdown",
-    e=>{
-      e.preventDefault();
-
-      if(tutorialActive){
-        beginActualGame();
-      }
-    }
-  );
+  }
+);
 
 
+/* =========================================================
+   VIDA
+========================================================= */
 
 function applyPlayerStats(){
-
   const u=shopState();
   const stats=upgradeStats(u);
 
@@ -1380,7 +1552,6 @@ function applyPlayerStats(){
 }
 
 function updateLifeHud(){
-
   const hp=Math.max(0,health);
   const sh=Math.max(0,shield);
 
@@ -1411,26 +1582,18 @@ function updateLifeHud(){
   }
 }
 
-function takeDamage(
-  amount,
-  pointsLoss=amount
-){
-
-  amount=
-    Math.max(
-      0,
-      Number(amount)||0
-    );
+function takeDamage(amount,pointsLoss=amount){
+  amount=Math.max(
+    0,
+    Number(amount)||0
+  );
 
   if(!amount||!running)return;
 
   let remaining=amount;
 
   const absorbed=
-    Math.min(
-      shield,
-      remaining
-    );
+    Math.min(shield,remaining);
 
   shield-=absorbed;
   remaining-=absorbed;
@@ -1444,8 +1607,7 @@ function takeDamage(
   score=
     Math.max(
       0,
-      score-
-      Math.max(
+      score-Math.max(
         0,
         Number(pointsLoss)||0
       )
@@ -1460,10 +1622,7 @@ function takeDamage(
   }
 }
 
-
-
 function die(){
-
   if(!running)return;
 
   running=false;
@@ -1481,22 +1640,18 @@ function die(){
   const u=users[playerKey];
 
   if(u){
-
-    // Uma derrota não salva os pontos da tentativa.
     users[playerKey]=u;
     saveUsers(users);
   }
 
   $("finalScore").textContent="0";
-
-  $("scoreTier").textContent=
-    "Derrota";
+  $("scoreTier").textContent="Derrota";
 
   $("resultText").textContent=
     `Sua vida chegou a 0. Você perdeu ${
-      levelKey==="marcus"
-        ?"a tentativa"
-        :"a partida"
+      levelKey==="marcus"?
+      "a tentativa":
+      "a partida"
     }.`;
 
   const reviveBtn=$("reviveBtn");
@@ -1512,22 +1667,19 @@ function die(){
   );
 
   $("resultOverlay")
-    .classList
-    .remove("hidden");
+    .classList.remove("hidden");
 }
 
 
+/* =========================================================
+   JOGO / TOUCH
+========================================================= */
 
-function hitLane(
-  lane,
-  touchY=null
-){
-
+function hitLane(lane,touchY=null){
   if(!running||paused)return;
 
   const now=performance.now();
 
-  // Proteção contra dois toques/cliques quase simultâneos.
   if(now-lastPointer<120)return;
 
   lastPointer=now;
@@ -1542,7 +1694,6 @@ function hitLane(
   ];
 
   if(!tiles.length){
-
     score=
       Math.max(
         0,
@@ -1550,7 +1701,6 @@ function hitLane(
       );
 
     $("score").textContent=score;
-
     return;
   }
 
@@ -1583,14 +1733,8 @@ function hitLane(
   }
 
   if(best&&dist<135){
-
-    hitTile(
-      best,
-      lane
-    );
-
+    hitTile(best,lane);
   }else{
-
     score=
       Math.max(
         0,
@@ -1601,43 +1745,41 @@ function hitLane(
   }
 }
 
+$("board").addEventListener(
+  "pointerdown",
+  e=>{
+    e.preventDefault();
 
+    if(!running||paused)return;
 
-$("board")
-  .addEventListener(
-    "pointerdown",
-    e=>{
+    const rect=
+      $("board").getBoundingClientRect();
 
-      e.preventDefault();
+    const x=
+      e.clientX-rect.left;
 
-      if(!running||paused)return;
-
-      const rect=
-        $("board").getBoundingClientRect();
-
-      const x=
-        e.clientX-
-        rect.left;
-
-      const lane=
-        Math.max(
-          0,
-          Math.min(
-            2,
-            Math.floor(
-              x/(rect.width/3)
-            )
+    const lane=
+      Math.max(
+        0,
+        Math.min(
+          2,
+          Math.floor(
+            x/(rect.width/3)
           )
-        );
-
-      hitLane(
-        lane,
-        e.clientY-rect.top
+        )
       );
-    }
-  );
+
+    hitLane(
+      lane,
+      e.clientY-rect.top
+    );
+  }
+);
 
 
+/* =========================================================
+   TECLADO
+========================================================= */
 
 document.addEventListener(
   "keydown",
@@ -1695,29 +1837,27 @@ document.addEventListener(
     }
 
     if(e.key==="Escape"){
-
       e.preventDefault();
-
       togglePause();
     }
   }
 );
 
 
+/* =========================================================
+   MENU PRINCIPAL
+========================================================= */
 
 function enterGameMenu(){
 
   $("registerPanel")
-    .classList
-    .add("hidden");
+    .classList.add("hidden");
 
   $("loginPanel")
-    .classList
-    .add("hidden");
+    .classList.add("hidden");
 
   $("gameSettings")
-    .classList
-    .remove("hidden");
+    .classList.remove("hidden");
 
   $("welcomeText").textContent=
     `Olá, ${player}! Escolha primeiro a dificuldade e depois uma música.`;
@@ -1734,45 +1874,41 @@ function renderColorGuide(){
   if(!box)return;
 
   box.innerHTML=
-    PK_NOTE_SCORES
-      .map(n=>
-        `<div class="colorGuideItem">
+    PK_NOTE_SCORES.map(n=>`
+      <div class="colorGuideItem">
 
-          <span
-            class="colorSwatch"
-            style="
-              background:${n.color};
-              ${
-                n.name==="Preto"
-                  ?"box-shadow:0 0 0 2px rgba(255,255,255,.45)"
-                  :""
-              }
-            "
-          ></span>
+        <span
+          class="colorSwatch"
+          style="
+            background:${n.color};
+            ${
+              n.name==="Preto"?
+              "box-shadow:0 0 0 2px rgba(255,255,255,.45)":
+              ""
+            }
+          "
+        ></span>
 
-          <span>
-            <b>${n.name}</b>
-            <small>
-              ${n.points}
-              ponto${n.points===1?"":"s"}
-            </small>
-          </span>
+        <span>
+          <b>${n.name}</b>
 
-        </div>`
-      )
-      .join("");
+          <small>
+            ${n.points}
+            ponto${n.points===1?"":"s"}
+          </small>
+        </span>
+
+      </div>
+    `).join("");
 }
 
-
-
 function updateBest(){
-
   const u=getUsers()[playerKey];
 
   $("bestInfo").textContent=
-    u
-      ?`Melhor pontuação de ${player}: ${u.best}`
-      :"";
+    u?
+      `Melhor pontuação de ${player}: ${u.best}`:
+      "";
 }
 
 function goToLobby(){
@@ -1785,25 +1921,24 @@ function goToLobby(){
   stopAudio();
 
   $("pauseOverlay")
-    .classList
-    .add("hidden");
+    .classList.add("hidden");
 
   $("resultOverlay")
-    .classList
-    .add("hidden");
+    .classList.add("hidden");
 
   $("game")
-    .classList
-    .add("hidden");
+    .classList.add("hidden");
 
   $("menu")
-    .classList
-    .remove("hidden");
+    .classList.remove("hidden");
 
   enterGameMenu();
 }
 
 
+/* =========================================================
+   VELOCIDADE
+========================================================= */
 
 function ramp(){
 
@@ -1841,12 +1976,9 @@ function ramp(){
     );
 
   const clickRamp=
-    hits<5
-      ?(
-        0.42+
-        0.58*early
-      )
-      :(
+    hits<5?
+      (0.42+0.58*early):
+      (
         1+
         Math.min(
           0.25,
@@ -1871,18 +2003,17 @@ function currentSpeed(){
 }
 
 function currentSpawn(){
-
   return Math.max(
     170,
     levels[levelKey].spawn/
-    (
-      0.72+
-      0.58*ramp()
-    )
+    (0.72+0.58*ramp())
   );
 }
 
 
+/* =========================================================
+   NOTAS
+========================================================= */
 
 function spawnTile(){
 
@@ -1892,49 +2023,47 @@ function spawnTile(){
     endingPhase
   )return;
 
-  const lanes=
-    [0,1,2]
-      .sort(
-        ()=>Math.random()-.5
-      );
+  const lanes=[
+    0,
+    1,
+    2
+  ].sort(
+    ()=>Math.random()-.5
+  );
 
   const tileHeight=
-    window.innerWidth<=700
-      ?125
-      :145;
+    window.innerWidth<=700?
+    125:
+    145;
 
-  let lane=
-    lanes.find(
-      l=>{
+  let lane=lanes.find(l=>{
 
-        const last=
-          $("board")
-            .children[l]
-            .querySelector(
-              ".tile:last-child"
-            );
+    const last=
+      $("board")
+        .children[l]
+        .querySelector(
+          ".tile:last-child"
+        );
 
-        if(!last)return true;
+    if(!last)return true;
 
-        return parseFloat(
-          last.dataset.y||"-145"
-        )>
-        tileHeight+34;
-      }
-    );
+    return parseFloat(
+      last.dataset.y||
+      "-145"
+    )>
+      tileHeight+34;
+  });
 
   if(lane===undefined)return;
 
   const tile=
     document.createElement("div");
 
-  const note=
-    pickNoteStyle();
+  const note=pickNoteStyle();
 
   tile.className="tile";
 
   tile.dataset.lane=lane;
-
   tile.dataset.points=
     String(note.points);
 
@@ -1951,7 +2080,6 @@ function spawnTile(){
     note.color;
 
   if(note.name==="Preto"){
-
     tile.style.boxShadow=
       "0 0 0 2px rgba(255,255,255,.45), 0 8px 24px rgba(0,0,0,.55)";
   }
@@ -1961,9 +2089,7 @@ function spawnTile(){
     .appendChild(tile);
 
   window.pkTotalNotes=
-    Number(
-      window.pkTotalNotes||0
-    )+1;
+    Number(window.pkTotalNotes||0)+1;
 }
 
 function scheduleSpawn(){
@@ -1992,9 +2118,7 @@ function animate(){
 
   if(!raf){
     raf=
-      requestAnimationFrame(
-        frame
-      );
+      requestAnimationFrame(frame);
   }
 }
 
@@ -2017,13 +2141,10 @@ function frame(){
           tile.dataset.y
         );
 
-      y+=
-        currentSpeed()*8;
+      y+=currentSpeed()*8;
 
       tile.dataset.y=y;
-
-      tile.style.top=
-        y+"px";
+      tile.style.top=y+"px";
 
       if(y>bottom-45){
 
@@ -2048,15 +2169,9 @@ function frame(){
   checkLevelClear();
 }
 
-function hitTile(
-  tile,
-  lane
-){
+function hitTile(tile,lane){
 
-  if(
-    !tile||
-    !tile.isConnected
-  )return;
+  if(!tile||!tile.isConnected)return;
 
   const points=
     Number(
@@ -2066,8 +2181,10 @@ function hitTile(
   score+=points;
   hits++;
 
-  $("score").textContent=
-    score;
+  window.pkHitNotes=
+    Number(window.pkHitNotes||0)+1;
+
+  $("score").textContent=score;
 
   tile.classList.add("good");
 
@@ -2085,22 +2202,18 @@ function hitTile(
 }
 
 
+/* =========================================================
+   FINALIZAÇÃO
+========================================================= */
 
 function beginEndingPhase(){
 
-  if(
-    endingPhase||
-    !running
-  )return;
+  if(endingPhase||!running)return;
 
   endingPhase=true;
 
   if(spawnTimer){
-
-    clearTimeout(
-      spawnTimer
-    );
-
+    clearTimeout(spawnTimer);
     spawnTimer=null;
   }
 
@@ -2120,8 +2233,6 @@ function checkLevelClear(){
     finishGame();
   }
 }
-
-
 
 function updateClock(){
 
@@ -2146,9 +2257,7 @@ function updateClock(){
     (remain/1000).toFixed(1);
 
   $("speedReadout").textContent=
-    `Velocidade ${
-      currentSpeed().toFixed(2)
-    }× • ${hits} acertos`;
+    `Velocidade ${currentSpeed().toFixed(2)}× • ${hits} acertos`;
 
   if(remain<=0){
     beginEndingPhase();
@@ -2156,19 +2265,19 @@ function updateClock(){
 }
 
 
+/* =========================================================
+   PAUSA
+========================================================= */
 
 function togglePause(){
 
   if(!running)return;
 
   paused=true;
-
-  pausedAt=
-    performance.now();
+  pausedAt=performance.now();
 
   $("pauseOverlay")
-    .classList
-    .remove("hidden");
+    .classList.remove("hidden");
 }
 
 function resumeGame(){
@@ -2176,20 +2285,21 @@ function resumeGame(){
   if(!running)return;
 
   totalPaused+=
-    performance.now()-
-    pausedAt;
+    performance.now()-pausedAt;
 
   paused=false;
 
   $("pauseOverlay")
-    .classList
-    .add("hidden");
+    .classList.add("hidden");
 
   scheduleSpawn();
   playMelodyBeat();
 }
 
 
+/* =========================================================
+   FINAL DA PARTIDA
+========================================================= */
 
 function finishGame(){
 
@@ -2206,15 +2316,13 @@ function finishGame(){
   gameWon=true;
 
   const rewardMultiplier=
-    reviveMultiplier>1
-      ?reviveMultiplier
-      :(
-        (
-          shopState().shop&&
-          shopState().shop.double
-        )
-        ?2
-        :1
+    reviveMultiplier>1?
+      reviveMultiplier:
+      (
+        shopState().shop&&
+        shopState().shop.double?
+        2:
+        1
       );
 
   awardCoins();
@@ -2226,17 +2334,15 @@ function finishGame(){
   const u=users[playerKey];
 
   const best=
-    u
-      ?Number(u.best||0)
-      :0;
+    u?
+    Number(u.best||0):
+    0;
 
   if(
     u&&
     rewardedScore>best
   ){
-
     u.best=rewardedScore;
-
     saveUsers(users);
   }
 
@@ -2249,36 +2355,35 @@ function finishGame(){
   lastResultTier=tier;
 
   $("resultText").textContent=
-    rewardedScore>best
-      ?`Novo recorde! • ${rewardMultiplier}× recompensa`
-      :`Você terminou com vida! • ${rewardMultiplier}× recompensa`;
+    rewardedScore>best?
+      `Novo recorde! • ${rewardMultiplier}× recompensa`:
+      `Você terminou com vida! • ${rewardMultiplier}× recompensa`;
 
   pkRecordResult(
     levelKey,
     tier
   );
 
-  const tierEl=
-    $("scoreTier");
+  const tierEl=$("scoreTier");
 
   if(tierEl){
-
     tierEl.textContent=
       `Classificação: ${tier}`;
   }
 
   $("reviveBtn")
-    .classList
-    .add("hidden");
+    .classList.add("hidden");
 
   $("resultOverlay")
-    .classList
-    .remove("hidden");
+    .classList.remove("hidden");
 
   updateBest();
 }
 
 
+/* =========================================================
+   REVIVER
+========================================================= */
 
 function useRevive(){
 
@@ -2297,16 +2402,13 @@ function useRevive(){
     Number(u.shop.revive)-1;
 
   users[playerKey]=u;
-
   saveUsers(users);
 
   $("resultOverlay")
-    .classList
-    .add("hidden");
+    .classList.add("hidden");
 
   $("game")
-    .classList
-    .remove("hidden");
+    .classList.remove("hidden");
 
   reviveMultiplier=2;
   gameWon=false;
@@ -2325,13 +2427,8 @@ function useRevive(){
   let n=3;
 
   if(countdown){
-
-    countdown
-      .classList
-      .remove("hidden");
-
-    countdown.textContent=
-      String(n);
+    countdown.classList.remove("hidden");
+    countdown.textContent=String(n);
   }
 
   const tick=()=>{
@@ -2341,10 +2438,7 @@ function useRevive(){
     if(n<=0){
 
       if(countdown){
-
-        countdown
-          .classList
-          .add("hidden");
+        countdown.classList.add("hidden");
       }
 
       clearTimers();
@@ -2363,13 +2457,11 @@ function useRevive(){
       totalPaused=0;
       lastPointer=0;
 
-      $("score").textContent=
-        "0";
+      $("score").textContent="0";
 
       $("time").textContent=
-        (
-          activeDuration/1000
-        ).toFixed(1);
+        (activeDuration/1000)
+        .toFixed(1);
 
       $("speedReadout").textContent=
         "Reviver • 2× recompensa";
@@ -2407,9 +2499,11 @@ function useRevive(){
 }
 
 
+/* =========================================================
+   LIMPEZA
+========================================================= */
 
 function clearTiles(){
-
   document
     .querySelectorAll(".tile")
     .forEach(
@@ -2437,38 +2531,41 @@ function clearTimers(){
   melodyTimer=null;
 
   if(raf){
-
     cancelAnimationFrame(raf);
-
     raf=null;
   }
 }
 
 
+/* =========================================================
+   ÁUDIO
+========================================================= */
 
 function applyAudioVolume(){
 
   if(master){
-
     master.gain.value=
-      muted
-        ?0
-        :(volume/100)*0.12;
+      muted?
+      0:
+      (volume/100)*0.12;
   }
 
-  $("volumeRange").value=
-    String(volume);
+  if($("volumeRange")){
+    $("volumeRange").value=
+      String(volume);
+  }
 
-  $("volumeValue").textContent=
-    `${volume}%`;
+  if($("volumeValue")){
+    $("volumeValue").textContent=
+      `${volume}%`;
+  }
 
-  $("muteBtn").textContent=
-    (
-      muted||
-      volume===0
-    )
-      ?"🔇"
-      :"🔊";
+  if($("muteBtn")){
+    $("muteBtn").textContent=
+      (muted||volume===0)?
+      "🔇":
+      "🔊";
+  }
 }
 
 function setVolume(v){
@@ -2504,7 +2601,6 @@ function toggleMute(){
     }
 
   }else{
-
     muted=true;
   }
 
@@ -2514,18 +2610,24 @@ function toggleMute(){
 function toggleVolumePanel(){
 
   $("volumePanel")
-    .classList
-    .toggle("hidden");
+    .classList.toggle("hidden");
 
   applyAudioVolume();
 }
 
-
-
 function startAudio(){
 
-  if(!audioCtx){
+  const selected=currentSong();
 
+  if(
+    selected&&
+    selected.youtubeId
+  ){
+    pkStartYoutubeMusic(selected);
+    return;
+  }
+
+  if(!audioCtx){
     audioCtx=
       new(
         window.AudioContext||
@@ -2533,10 +2635,7 @@ function startAudio(){
       )();
   }
 
-  if(
-    audioCtx.state==="suspended"
-  ){
-
+  if(audioCtx.state==="suspended"){
     audioCtx.resume();
   }
 
@@ -2561,9 +2660,7 @@ function startAudio(){
 function playMelodyBeat(){
 
   if(!running||paused){
-
     melodyTimer=null;
-
     return;
   }
 
@@ -2578,8 +2675,7 @@ function playMelodyBeat(){
 
   beep(
     s.notes[
-      melodyIndex%
-      s.notes.length
+      melodyIndex%s.notes.length
     ],
     .09
   );
@@ -2606,12 +2702,11 @@ function stopAudio(){
   }
 
   melodyTimer=null;
+
+  pkStopYoutubeMusic();
 }
 
-function beep(
-  freq,
-  dur
-){
+function beep(freq,dur){
 
   if(
     !audioCtx||
@@ -2656,11 +2751,10 @@ function beep(
 }
 
 
+/* =========================================================
+   INICIAR PARTIDA
+========================================================= */
 
-// === INÍCIO DA PARTIDA ===
-// CORREÇÃO PRINCIPAL:
-// agora songKey e levelKey são definidos ANTES
-// de verificar se a dificuldade está desbloqueada.
 function startGame(){
 
   songKey=
@@ -2669,12 +2763,16 @@ function startGame(){
   levelKey=
     $("levelSelect").value;
 
+  /*
+    CORREÇÃO IMPORTANTE:
+    a dificuldade é lida ANTES de verificar
+    se ela está desbloqueada.
+  */
+
   if(
-    typeof pkUnlocked==="function" &&
+    typeof pkUnlocked==="function"&&
     !pkUnlocked(levelKey)
   ){
-
-    // Não mostra alert repetidamente.
     return;
   }
 
@@ -2684,11 +2782,14 @@ function startGame(){
 
   score=0;
   hits=0;
+
   running=false;
   paused=false;
   endingPhase=false;
+
   resultRecorded=false;
   tutorialActive=true;
+
   startTime=0;
   totalPaused=0;
   lastPointer=0;
@@ -2701,8 +2802,7 @@ function startGame(){
 
   applyPlayerStats();
 
-  $("score").textContent=
-    "0";
+  $("score").textContent="0";
 
   $("time").textContent=
     (
@@ -2714,44 +2814,33 @@ function startGame(){
     "Tutorial";
 
   $("pauseOverlay")
-    .classList
-    .add("hidden");
+    .classList.add("hidden");
 
   $("resultOverlay")
-    .classList
-    .add("hidden");
+    .classList.add("hidden");
 
   $("menu")
-    .classList
-    .add("hidden");
+    .classList.add("hidden");
 
   $("game")
-    .classList
-    .remove("hidden");
+    .classList.remove("hidden");
 
   $("tutorialOverlay")
-    .classList
-    .remove("hidden");
+    .classList.remove("hidden");
 
   $("tutorialDifficulty").textContent=
     `${levels[levelKey].label} • ${
-      currentSong()
-        .title
-        .split(" — ")[0]
+      currentSong().title.split(" — ")[0]
     }`;
 
   $("tutorialSpeed").textContent=
-    `Começa suave e acelera depois dos primeiros 5 acertos. Máximo desta dificuldade: ${
-      levels[levelKey].speed.toFixed(2)
-    }×`;
+    `Começa suave e acelera depois dos primeiros 5 acertos. Máximo desta dificuldade: ${levels[levelKey].speed.toFixed(2)}×`;
 
   $("volumeSongLink").href=
     currentSong().youtube;
 
   $("volumeSongLink").textContent=
-    `Ouvir referência: ${
-      currentSong().title
-    }`;
+    `Ouvir referência: ${currentSong().title}`;
 
   clearTimers();
   clearTiles();
@@ -2759,13 +2848,14 @@ function startGame(){
 
   $("songHud").textContent=
     `${levels[levelKey].label} • ${
-      currentSong()
-        .title
-        .split(" — ")[0]
+      currentSong().title.split(" — ")[0]
     }`;
 }
 
 
+/* =========================================================
+   COMEÇAR APÓS TUTORIAL
+========================================================= */
 
 function beginActualGame(){
 
@@ -2774,11 +2864,11 @@ function beginActualGame(){
   tutorialActive=false;
 
   $("tutorialOverlay")
-    .classList
-    .add("hidden");
+    .classList.add("hidden");
 
   score=0;
   hits=0;
+
   running=true;
   endingPhase=false;
   paused=false;
@@ -2795,16 +2885,17 @@ function beginActualGame(){
   reviveMultiplier=1;
   gameWon=false;
 
+  window.pkHitNotes=0;
+  window.pkMissNotes=0;
+  window.pkTotalNotes=0;
+
   applyPlayerStats();
 
-  $("score").textContent=
-    "0";
+  $("score").textContent="0";
 
   $("time").textContent=
-    (
-      levels[levelKey].duration/
-      1000
-    ).toFixed(1);
+    (levels[levelKey].duration/1000)
+    .toFixed(1);
 
   $("speedReadout").textContent=
     "Preparando...";
@@ -2826,49 +2917,44 @@ function beginActualGame(){
 }
 
 
+/* =========================================================
+   CORREÇÃO DO ÁUDIO AO TOCAR
+========================================================= */
 
 function resumeAudioNow(){
 
   try{
 
     if(
-      typeof audioCtx!=="undefined" &&
+      typeof audioCtx!=="undefined"&&
       audioCtx
     ){
 
       if(
         audioCtx.state==="suspended"
       ){
-
         audioCtx.resume();
       }
 
       if(
-        typeof master!=="undefined" &&
+        typeof master!=="undefined"&&
         master&&
         audioCtx.currentTime
       ){
 
-        const v=
-          typeof volumeSlider!=="undefined" &&
-          volumeSlider
-            ?Number(volumeSlider.value)/100
-            :0.85;
+        const target=
+          muted?
+          0:
+          (volume/100)*0.12;
 
         master.gain.cancelScheduledValues(
           audioCtx.currentTime
         );
 
         master.gain.setTargetAtTime(
-          Math.max(
-            0,
-            Math.min(
-              1,
-              v
-            )
-          )*.95,
+          target,
           audioCtx.currentTime,
-          .015
+          0.015
         );
       }
     }
@@ -2888,6 +2974,9 @@ document.addEventListener(
 );
 
 
+/* =========================================================
+   MISSÃO DA DIFICULDADE
+========================================================= */
 
 function pkUpdateDifficultyMission(){
 
@@ -2931,16 +3020,21 @@ document.addEventListener(
 
       sel.addEventListener(
         "change",
-        ()=>setTimeout(
-          pkUpdateDifficultyMission,
-          0
-        )
+        ()=>{
+          setTimeout(
+            pkUpdateDifficultyMission,
+            0
+          );
+        }
       );
     }
   }
 );
 
 
+/* =========================================================
+   CLASSIFICAÇÃO
+========================================================= */
 
 function pkShowTier(){
 
@@ -2960,7 +3054,6 @@ function pkShowTier(){
 
 setInterval(
   ()=>{
-
     const ov=
       document.getElementById(
         "resultOverlay"
@@ -2973,7 +3066,6 @@ setInterval(
         getComputedStyle(ov).display!=="none"
       )
     ){
-
       pkShowTier();
     }
   },
@@ -2981,17 +3073,18 @@ setInterval(
 );
 
 
+/* =========================================================
+   ATUALIZAÇÃO DA LOJA
+========================================================= */
 
 setInterval(
   ()=>{
-
     const ov=$("shopOverlay");
 
     if(
       ov&&
       !ov.classList.contains("hidden")
     ){
-
       renderShop();
     }
   },
