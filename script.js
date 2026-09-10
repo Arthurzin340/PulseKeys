@@ -2,7 +2,7 @@ const $=id=>document.getElementById(id);
 
 let player=localStorage.getItem("pulseKeysPlayer")||"";
 let playerKey=localStorage.getItem("pulseKeysPlayerKey")||"";
-let songKey="neon",levelKey="medium";
+let songKey="neon",levelKey="noob";
 let score=0,hits=0,running=false,paused=false,endingPhase=false,startTime=0,totalPaused=0,pausedAt=0,activeDuration=0;
 let spawnTimer=null,clockTimer=null,melodyTimer=null,raf=null;
 let muted=false,audioCtx=null,master=null,lastPointer=0,melodyIndex=0,resultRecorded=false;
@@ -604,12 +604,15 @@ $("registerBtn").addEventListener("pointerdown",e=>{
   e.preventDefault();
   const name=$("registerName").value.trim(),pass=$("registerPassword").value.trim();
   if(!name){alert("Digite um nome.");return}
-  if(!/^\d{4,6}$/.test(pass)){alert("A senha deve ter de 4 a 6 números.");return}
+  if(pass.length<4 || pass.length>10){alert("A senha deve ter de 4 a 10 caracteres.");return}
   const users=getUsers(),key=userKey(name);
   if(users[key]){alert("Esse nome já está cadastrado. Use a aba Entrar.");return}
   users[key]={name,password:pass,best:0};saveUsers(users);
   player=users[key].name;playerKey=key;
   localStorage.setItem("pulseKeysPlayer",player);localStorage.setItem("pulseKeysPlayerKey",playerKey);
+  levelKey="noob";
+  const levelSelect=document.getElementById("levelSelect");
+  if(levelSelect) levelSelect.value="noob";
   enterGameMenu();
 });
 
@@ -638,6 +641,7 @@ $("volumeRange").addEventListener("input",e=>setVolume(Number(e.target.value)));
 $("shopBtn").addEventListener("pointerdown",e=>{e.preventDefault();openShop()});
 $("reviveBtn").addEventListener("pointerdown",e=>{e.preventDefault();useRevive()});
 $("closeShopBtn").addEventListener("pointerdown",e=>{e.preventDefault();closeShop()});
+document.getElementById("adminCodeClose")?.addEventListener("pointerdown",e=>{e.preventDefault();pkCloseAdminCode();});
 $("tutorialOverlay").addEventListener("pointerdown",e=>{e.preventDefault();if(tutorialActive)beginActualGame()});
 
 function pkInfiniteStageText(){return `∞ Infinito • Estágio ${infiniteStage} • ${pkInfiniteStageSpeed(infiniteStage)}× • ${infiniteStageScore}/${PK_INFINITE_STAGE_TARGET} pts`;}
@@ -760,10 +764,41 @@ document.addEventListener("keydown",e=>{
   if(e.key==="Escape"){e.preventDefault();togglePause();}
 });
 
+const PK_ADMIN_CODE_SNIPPETS=[{"title":"🎵 Música — startAudio()","description":"Inicia a música escolhida. Se ela for do YouTube, usa o player do YouTube; caso contrário, inicia o áudio criado pelo próprio jogo.","code":"function startAudio(){\n  const selected=currentSong();\n  if(selected&&selected.youtubeId){\n    pkStopYoutubeMusic();\n    pkStartYoutubeMusic(selected);\n    return;\n  }\n  pkStopYoutubeMusic();\n  if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();\n  if(audioCtx.state===\"suspended\")audioCtx.resume();\n}"},{"title":"⬇️ Notas — spawnTile()","description":"Cria uma peça, escolhe uma das três pistas e define os pontos e a aparência da nota.","code":"function spawnTile(){\n  if(!running||paused||endingPhase)return;\n  const lanes=[0,1,2].sort(()=>Math.random()-.5);\n  let lane=lanes.find(l=>{\n    const last=$(\"board\").children[l].querySelector(\".tile:last-child\");\n    if(!last)return true;\n    return parseFloat(last.dataset.y||\"-145\")>179;\n  });\n  if(lane===undefined)return;\n  const tile=document.createElement(\"div\");\n  const note=pickNoteStyle();\n  tile.className=\"tile\";\n  tile.dataset.lane=lane;\n  tile.dataset.points=String(note.points);\n  tile.style.background=note.color;\n  $(\"board\").children[lane].appendChild(tile);\n}"},{"title":"👆 Touch — hitLane() + pointerdown","description":"Detecta onde o jogador tocou, identifica uma das três pistas e procura a peça mais próxima da área de acerto.","code":"function hitLane(lane,touchY=null){\n  if(!running||paused)return;\n  const now=performance.now();\n  if(now-lastPointer<120)return;\n  lastPointer=now;\n  const rect=$(\"board\").getBoundingClientRect();\n  const tiles=[...document.querySelectorAll(`.lane[data-lane=\"${lane}\"] .tile`)];\n  if(!tiles.length)return;\n  if(touchY===null)touchY=rect.height*.78;\n  let best=null,dist=Infinity;\n  for(const tile of tiles){\n    const tr=tile.getBoundingClientRect();\n    const center=tr.top+tr.height/2-rect.top;\n    const d=Math.abs(center-touchY);\n    if(d<dist){dist=d;best=tile}\n  }\n  if(best&&dist<135)hitTile(best,lane);\n}\n\n$(\"board\").addEventListener(\"pointerdown\",e=>{\n  e.preventDefault();\n  const rect=$(\"board\").getBoundingClientRect();\n  const x=e.clientX-rect.left;\n  const lane=Math.max(0,Math.min(2,Math.floor(x/(rect.width/3))));\n  hitLane(lane,e.clientY-rect.top);\n});"},{"title":"🎯 Acerto — hitTile()","description":"Registra o acerto, soma os pontos da nota e prepara a próxima peça.","code":"function hitTile(tile,lane){\n  if(!tile||!tile.isConnected)return;\n  const points=Number(tile.dataset.points||1);\n  score+=points;\n  hits++;\n  if(pkIsInfinite())infiniteStageScore+=points;\n  $(\"score\").textContent=score;\n  tile.classList.add(\"good\");\n  setTimeout(()=>tile.remove(),130);\n  beep(330+lane*90,.045);\n  scheduleSpawn();\n}"},{"title":"❤️🛡️ Vida e escudo — takeDamage()","description":"Controla o dano: primeiro o escudo absorve o máximo possível; o restante é descontado da vida.","code":"function takeDamage(amount,pointsLoss=amount){\n  amount=Math.max(0,Number(amount)||0);\n  if(!amount||!running)return;\n  let remaining=amount;\n  const absorbed=Math.min(shield,remaining);\n  shield-=absorbed;\n  remaining-=absorbed;\n  health=Math.max(0,health-remaining);\n  score=Math.max(0,score-Math.max(0,Number(pointsLoss)||0));\n  updateLifeHud();\n  $(\"score\").textContent=score;\n  if(health<=0)die();\n}"},{"title":"♻️ Ressuscitar — useRevive()","description":"Consome um Reviver comprado na loja, faz a contagem regressiva e reinicia a tentativa.","code":"function useRevive(){\n  const users=getUsers(),u=users[playerKey];\n  if(!u)return;\n  refreshShopIfNeeded(u);\n  if(Number(u.shop.revive||0)<=0)return;\n  u.shop.revive=Number(u.shop.revive)-1;\n  users[playerKey]=u;\n  saveUsers(users);\n  $(\"resultOverlay\").classList.add(\"hidden\");\n  $(\"game\").classList.remove(\"hidden\");\n  reviveMultiplier=2;\n  gameWon=false;\n  score=0;\n  hits=0;\n}"}];
+
+function pkRenderAdminCode(){
+  const panel=document.getElementById("adminCodePanel");
+  const list=document.getElementById("adminCodeList");
+  if(!panel||!list)return;
+  const isAdmin=playerKey==="arthur" || !!getUsers()[playerKey]?.admin;
+  if(!isAdmin){panel.classList.add("hidden");return;}
+  list.innerHTML=PK_ADMIN_CODE_SNIPPETS.map((item,index)=>`<article class="adminCodeCard"><div class="adminCodeTitle">${item.title}</div><p>${item.description}</p><pre><code>${item.code.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}</code></pre></article>`).join("");
+}
+function pkOpenAdminCode(){
+  if(playerKey!=="arthur" && !getUsers()[playerKey]?.admin)return;
+  pkRenderAdminCode();
+  document.getElementById("adminCodePanel")?.classList.remove("hidden");
+}
+function pkCloseAdminCode(){document.getElementById("adminCodePanel")?.classList.add("hidden");}
+
 function enterGameMenu(){
+  levelKey="noob";
+  const levelSelect=document.getElementById("levelSelect");
+  if(levelSelect) levelSelect.value="noob";
   $("registerPanel").classList.add("hidden");$("loginPanel").classList.add("hidden");$("gameSettings").classList.remove("hidden");
   $("welcomeText").textContent=`Olá, ${player}! Escolha primeiro a dificuldade e depois uma música.`;
-  updateBest();updatePlaylist();renderColorGuide();pkEnsureModeUI();pkSyncModeUI();
+  updateBest();updatePlaylist();renderColorGuide();pkEnsureModeUI();pkSyncModeUI();pkRenderAdminCode();
+  const isAdmin=playerKey==="arthur" || !!getUsers()[playerKey]?.admin;
+  let adminBtn=document.getElementById("adminCodeBtn");
+  if(isAdmin && !adminBtn){
+    adminBtn=document.createElement("button");
+    adminBtn.id="adminCodeBtn";adminBtn.className="secondary adminCodeBtn";adminBtn.textContent="💻 Ver código principal";
+    adminBtn.addEventListener("pointerdown",e=>{e.preventDefault();pkOpenAdminCode();});
+    const settings=document.getElementById("gameSettings");
+    const best=document.getElementById("bestInfo");
+    if(settings&&best)settings.insertBefore(adminBtn,best);
+  }
+  if(!isAdmin && adminBtn)adminBtn.remove();
 }
 function renderColorGuide(){
   const box=$("colorGuide");
