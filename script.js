@@ -9,6 +9,7 @@ let muted=false,audioCtx=null,master=null,lastPointer=0,melodyIndex=0,resultReco
 let maxHealth=20,health=20,maxShield=5,shield=5,reviveMultiplier=1,gameWon=false;
 let volume=Number(localStorage.getItem("pulseKeysVolume")||70);
 let tutorialActive=false,lastResultTier="Ruim";
+let infiniteMode=false, infiniteStage=1, infiniteStageScore=0, infiniteStageEnding=false;
 
 
 // === MISSÕES / DESBLOQUEIO DE DIFICULDADES ===
@@ -80,12 +81,46 @@ function pickNoteStyle(){
 }
 
 const levels={
-  noob:{duration:18000,spawn:1120,speed:.34,label:"Noob"},
-  medium:{duration:18500,spawn:780,speed:.58,label:"Médio"},
+  noob:{duration:18000,spawn:1120,speed:.36,label:"Noob"},
+  medium:{duration:18500,spawn:780,speed:.62,label:"Médio"},
   hard:{duration:19500,spawn:590,speed:.90,label:"Difícil"},
-  insane:{duration:20000,spawn:420,speed:1.30,label:"Insano"},
+  insane:{duration:20000,spawn:420,speed:1.38,label:"Insano"},
   marcus:{duration:20000,spawn:300,speed:2.50,label:"Marcus"}
 };
+const PK_INFINITE_DURATION=Infinity;
+const PK_INFINITE_STAGE_TARGET=100;
+function pkIsInfinite(){return !!infiniteMode;}
+function pkInfiniteStageSpeed(stage){
+  stage=Math.max(1,Number(stage)||1);
+  if(stage===1)return 1;
+  if(stage===2)return 1.5;
+  if(stage===3)return 2;
+  if(stage===4)return 2.5;
+  if(stage===5)return 3.5;
+  if(stage===6)return 4;
+  return 4+(stage-6);
+}
+function pkInfiniteLabel(){return `∞ Infinito • ${levels[levelKey].label} • Estágio ${infiniteStage}`;}
+function pkEnsureModeUI(){
+  if(document.getElementById("pkModeBox"))return;
+  const settings=document.getElementById("gameSettings");
+  if(!settings)return;
+  const box=document.createElement("div");
+  box.id="pkModeBox";
+  box.style.cssText="display:block;width:100%;box-sizing:border-box;margin:12px 0;padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.05);color:#fff";
+  box.innerHTML=`<label style="display:block;font-weight:800;margin-bottom:6px">🎮 Modo de jogo</label><select id="pkModeSelect" style="width:100%;padding:10px;border-radius:9px;background:#111;color:#fff;border:1px solid rgba(255,255,255,.25)"><option value="normal">Fase normal</option><option value="infinite">∞ Infinito</option></select><div id="pkModeHint" style="font-size:12px;opacity:.85;margin-top:7px;line-height:1.35">A fase termina depois do tempo e das notas restantes.</div>`;
+  const level=document.getElementById("levelSelect");
+  if(level&&level.parentElement)level.parentElement.insertAdjacentElement("afterend",box);else settings.prepend(box);
+  const select=document.getElementById("pkModeSelect");
+  select.addEventListener("change",()=>{infiniteMode=select.value==="infinite";const hint=document.getElementById("pkModeHint");if(hint)hint.textContent=infiniteMode?"A música e as notas continuam sem limite de tempo. Você joga até perder toda a vida.":"A fase termina depois do tempo e das notas restantes.";});
+}
+function pkSyncModeUI(){
+  pkEnsureModeUI();
+  const select=document.getElementById("pkModeSelect");
+  if(select)select.value=infiniteMode?"infinite":"normal";
+  const hint=document.getElementById("pkModeHint");
+  if(hint)hint.textContent=infiniteMode?"A música e as notas continuam sem limite de tempo. Você joga até perder toda a vida.":"A fase termina depois do tempo e das notas restantes.";
+}
 
 // As faixas abaixo são referências para ouvir no YouTube. O jogo continua usando
 // áudio sintetizado localmente, então não depende de streaming para funcionar.
@@ -386,14 +421,15 @@ function pkAddCustomMusic(){
   const list=pkCustomSongs();
   if(list.some(s=>s.youtubeId===id)){alert("Essa música já foi adicionada.");return}
   const title=(nameInput.value.trim()||"Minha música")+" — YouTube";
-  const item={key:"custom-"+Date.now(),title,bpm:140,notes:[261.63,329.63,392,523.25,392,329.63,293.66,392],youtube:"https://www.youtube.com/watch?v="+id,youtubeId:id,level:levelKey,tag:"🎵 personalizada"};
+  const difficulty=levels[levelKey]?.label||levelKey;
+  const item={key:"custom-"+Date.now(),title,bpm:140,notes:[261.63,329.63,392,523.25,392,329.63,293.66,392],youtube:"https://www.youtube.com/watch?v="+id,youtubeId:id,level:levelKey,difficulty,tag:"🎵 personalizada"};
   list.push(item);pkSaveCustomSongs(list);input.value="";nameInput.value="";songKey=item.key;updatePlaylist();pkRenderCustomMusicList();
-  alert("Música adicionada! Ela ficou disponível nesta dificuldade.");
+  alert(`🎵 Música adicionada!\n\nDificuldade: ${difficulty}\n\nEla ficou salva nesta dificuldade e aparecerá na lista de músicas dela.`);
 }
 function pkRenderCustomMusicList(){
   const box=document.getElementById("pkCustomMusicList");if(!box)return;
   const list=pkCustomSongsForLevel();
-  box.innerHTML=list.length?list.map(s=>`<div style="display:flex;gap:8px;align-items:center;margin:4px 0"><span style="flex:1">${s.title}</span><button type="button" class="pkRemoveCustom" data-key="${s.key}">Remover</button></div>`).join(""):"<small>Nenhuma música personalizada nesta dificuldade.</small>";
+  box.innerHTML=list.length?list.map(s=>{const diff=s.difficulty||levels[s.level]?.label||s.level||"—";return `<div style="display:flex;gap:8px;align-items:center;margin:4px 0;flex-wrap:wrap"><span style="flex:1">${s.title}<small style="display:block;opacity:.72">Dificuldade: ${diff}</small></span><button type="button" class="pkRemoveCustom" data-key="${s.key}">Remover</button></div>`}).join(""):"<small>Nenhuma música personalizada nesta dificuldade.</small>";
   box.querySelectorAll(".pkRemoveCustom").forEach(b=>b.addEventListener("pointerdown",e=>{e.preventDefault();pkRemoveCustomMusic(b.dataset.key)}));
 }
 function pkRemoveCustomMusic(key){
@@ -501,12 +537,9 @@ function pkCreateYoutubePlayer(song){
         event.target.playVideo();
       },
       onStateChange:event=>{
-        if(
-          window.YT&&
-          YT.PlayerState&&
-          event.data===YT.PlayerState.ENDED
-        ){
-          event.target.playVideo();
+        if(window.YT&&YT.PlayerState&&event.data===YT.PlayerState.ENDED){
+          if(pkIsInfinite()&&running&&!infiniteStageEnding){infiniteStageEnding=true;beginEndingPhase();}
+          else event.target.stopVideo();
         }
       },
       onError:event=>{
@@ -536,7 +569,18 @@ function pkStartYoutubeMusic(song){
   });
 }
 
-function pkStopYoutubeMusic(){const frame=document.getElementById("pkYoutubePlayer");if(frame)frame.src="about:blank"}
+function pkStopYoutubeMusic(){
+  try{
+    if(pkYoutubePlayer){
+      if(typeof pkYoutubePlayer.stopVideo==="function")pkYoutubePlayer.stopVideo();
+      if(typeof pkYoutubePlayer.destroy==="function")pkYoutubePlayer.destroy();
+    }
+  }catch(e){}
+  pkYoutubePlayer=null;
+  pkYoutubePendingSong=null;
+  const host=document.getElementById("pkYoutubePlayerHost");
+  if(host)host.innerHTML="";
+}
 function updatePlaylist(){
   const list=pkAllSongsForLevel();
   if(!list.some(s=>s.key===songKey))songKey=list[0].key;
@@ -545,7 +589,7 @@ function updatePlaylist(){
   select.value=songKey;
   $("playlistInfo").textContent=`${levels[levelKey].label}: ${list.map(s=>s.title.split(" — ")[0]).join(" • ")}`;
   $("songLinks").innerHTML=list.map(s=>`<div class="songLinkRow"><span>${s.tag}</span><a href="${s.youtube}" target="_blank" rel="noopener noreferrer">${s.title}</a></div>`).join("");
-  pkEnsureCustomMusicUI();pkRenderCustomMusicList();
+  pkEnsureCustomMusicUI();pkRenderCustomMusicList();pkEnsureModeUI();pkSyncModeUI();
 }
 
 function showTab(tab){
@@ -596,9 +640,62 @@ $("reviveBtn").addEventListener("pointerdown",e=>{e.preventDefault();useRevive()
 $("closeShopBtn").addEventListener("pointerdown",e=>{e.preventDefault();closeShop()});
 $("tutorialOverlay").addEventListener("pointerdown",e=>{e.preventDefault();if(tutorialActive)beginActualGame()});
 
-function applyPlayerStats(){
+function pkInfiniteStageText(){return `∞ Infinito • Estágio ${infiniteStage} • ${pkInfiniteStageSpeed(infiniteStage)}× • ${infiniteStageScore}/${PK_INFINITE_STAGE_TARGET} pts`;}
+function pkShowInfiniteStageMessage(){
+  const message=document.getElementById("resultText"),tier=document.getElementById("scoreTier"),overlay=document.getElementById("resultOverlay");
+  if(!message||!tier||!overlay)return;
+  if(infiniteStage===6){
+    tier.textContent="Parabéns!";
+    message.textContent="Parabéns, você finalizou todos os cinco estágios. Você está pronto para começar os próximos cinco estágios, mais difíceis do que o outro. O último estágio concluído foi 3.5× de velocidade. Agora começa o estágio 6 em 4×.";
+  }else{tier.textContent=`Estágio ${infiniteStage}`;message.textContent=`Estágio ${infiniteStage}: velocidade ${pkInfiniteStageSpeed(infiniteStage)}×. Continue jogando!`;}
+  overlay.classList.remove("hidden");
+  setTimeout(()=>overlay.classList.add("hidden"),2600);
+}
+function pkAdvanceInfiniteStage(){
+  if(!pkIsInfinite()||!running)return;
+  infiniteStageEnding=false;infiniteStage++;infiniteStageScore=0;clearTiles();
+  if(spawnTimer){clearTimeout(spawnTimer);spawnTimer=null;}
+  pkShowInfiniteStageMessage();
+  setTimeout(()=>{
+    if(!running||paused||!pkIsInfinite())return;
+    if(pkYoutubePlayer&&typeof pkYoutubePlayer.setPlaybackRate==="function"){
+      try{pkYoutubePlayer.setPlaybackRate(Math.min(2,pkInfiniteStageSpeed(infiniteStage)));}catch(e){}
+    }
+    spawnTile();scheduleSpawn();
+  },2650);
+}
+function pkInfiniteStageText(){return `∞ Infinito • Estágio ${infiniteStage} • ${pkInfiniteStageSpeed(infiniteStage)}× • ${infiniteStageScore}/${PK_INFINITE_STAGE_TARGET} pts`;}
+function pkShowInfiniteStageMessage(){
+  const message=document.getElementById("resultText"),tier=document.getElementById("scoreTier"),overlay=document.getElementById("resultOverlay");
+  if(!message||!tier||!overlay)return;
+  if(infiniteStage===6){
+    tier.textContent="Parabéns!";
+    message.textContent="Parabéns, você finalizou todos os cinco estágios. Você está pronto para começar os próximos cinco estágios, mais difíceis do que o outro. O último estágio concluído foi 3.5× de velocidade. Agora começa o estágio 6 em 4×.";
+  }else{tier.textContent=`Estágio ${infiniteStage}`;message.textContent=`Estágio ${infiniteStage}: velocidade ${pkInfiniteStageSpeed(infiniteStage)}×. Continue jogando!`;}
+  overlay.classList.remove("hidden");
+  setTimeout(()=>overlay.classList.add("hidden"),2600);
+}
+function pkAdvanceInfiniteStage(){
+  if(!pkIsInfinite()||!running)return;
+  infiniteStageEnding=false;infiniteStage++;infiniteStageScore=0;clearTiles();
+  if(spawnTimer){clearTimeout(spawnTimer);spawnTimer=null;}
+  pkShowInfiniteStageMessage();
+  setTimeout(()=>{
+    if(!running||paused||!pkIsInfinite())return;
+    if(pkYoutubePlayer&&typeof pkYoutubePlayer.setPlaybackRate==="function"){
+      try{pkYoutubePlayer.setPlaybackRate(Math.min(2,pkInfiniteStageSpeed(infiniteStage)));}catch(e){}
+    }
+    spawnTile();scheduleSpawn();
+  },2650);
+}
+function applyPlayerStats(consumeShield=false){
   const u=shopState(),stats=upgradeStats(u);
-  maxHealth=stats.maxHealth;maxShield=stats.maxShield;health=maxHealth;shield=maxShield;
+  maxHealth=stats.maxHealth;
+  maxShield=stats.maxShield;
+  health=maxHealth;
+  const hasPurchasedShield=Number(u.shop?.shield||0)>0;
+  shield=hasPurchasedShield?maxShield:0;
+  if(consumeShield&&hasPurchasedShield){u.shop.shield=Number(u.shop.shield)-1;const users=getUsers();users[playerKey]=u;saveUsers(users);}
   updateLifeHud();
 }
 function updateLifeHud(){
@@ -666,7 +763,7 @@ document.addEventListener("keydown",e=>{
 function enterGameMenu(){
   $("registerPanel").classList.add("hidden");$("loginPanel").classList.add("hidden");$("gameSettings").classList.remove("hidden");
   $("welcomeText").textContent=`Olá, ${player}! Escolha primeiro a dificuldade e depois uma música.`;
-  updateBest();updatePlaylist();renderColorGuide();
+  updateBest();updatePlaylist();renderColorGuide();pkEnsureModeUI();pkSyncModeUI();
 }
 function renderColorGuide(){
   const box=$("colorGuide");
@@ -684,15 +781,21 @@ function goToLobby(){
 function ramp(){
   if(!running)return 1;
   const elapsed=Math.max(0,performance.now()-startTime-totalPaused);
-  const progress=Math.min(1,elapsed/Math.max(1,activeDuration||levels[levelKey].duration));
+  const progress=pkIsInfinite()?Math.min(1,elapsed/60000):Math.min(1,elapsed/Math.max(1,activeDuration||levels[levelKey].duration));
   const early=Math.min(1,hits/5);
   // Começa suave. Depois do 5º acerto, a aceleração fica bem mais forte.
   const timeRamp=Math.min(1,progress/0.34);
   const clickRamp=hits<5?(0.42+0.58*early):(1+Math.min(0.25,(hits-5)*0.025));
   return Math.min(1.28,0.42+0.58*Math.max(timeRamp,early)+(clickRamp-1)*0.65);
 }
-function currentSpeed(){return levels[levelKey].speed*ramp()}
-function currentSpawn(){return Math.max(170,levels[levelKey].spawn/(0.72+0.58*ramp()))}
+function currentSpeed(){
+  if(pkIsInfinite())return levels[levelKey].speed*pkInfiniteStageSpeed(infiniteStage);
+  return levels[levelKey].speed*ramp();
+}
+function currentSpawn(){
+  if(pkIsInfinite())return Math.max(150,levels[levelKey].spawn/Math.max(1,pkInfiniteStageSpeed(infiniteStage)));
+  return Math.max(170,levels[levelKey].spawn/(0.72+0.58*ramp()));
+}
 
 function spawnTile(){
   if(!running||paused||endingPhase)return;
@@ -743,7 +846,9 @@ function hitTile(tile,lane){
   const points=Number(tile.dataset.points||1);
   score+=points;
   hits++;
+  if(pkIsInfinite())infiniteStageScore+=points;
   $("score").textContent=score;
+  if(pkIsInfinite()&&infiniteStageScore>=PK_INFINITE_STAGE_TARGET&&!infiniteStageEnding){infiniteStageEnding=true;beginEndingPhase();}
   tile.classList.add("good");setTimeout(()=>tile.remove(),130);beep(330+lane*90,.045);
   scheduleSpawn();
 }
@@ -751,15 +856,24 @@ function beginEndingPhase(){
   if(endingPhase||!running)return;
   endingPhase=true;
   if(spawnTimer){clearTimeout(spawnTimer);spawnTimer=null;}
-  $("speedReadout").textContent="Finalizando notas...";
+  $("speedReadout").textContent=pkIsInfinite()?"Estágio concluído — finalizando notas...":"Finalizando notas...";
   checkLevelClear();
 }
 function checkLevelClear(){
-  if(running && endingPhase && document.querySelectorAll(".tile").length===0) finishGame();
+  if(running&&endingPhase&&document.querySelectorAll(".tile").length===0){
+    if(pkIsInfinite()){endingPhase=false;pkAdvanceInfiniteStage();}
+    else finishGame();
+  }
 }
 function updateClock(){
   if(!running||paused)return;
-  const elapsed=performance.now()-startTime-totalPaused,remain=Math.max(0,(activeDuration||levels[levelKey].duration)-elapsed);
+  const elapsed=performance.now()-startTime-totalPaused;
+  if(pkIsInfinite()){
+    $("time").textContent="∞";
+    $("speedReadout").textContent=pkInfiniteStageText()+` • ${hits} acertos`;
+    return;
+  }
+  const remain=Math.max(0,(activeDuration||levels[levelKey].duration)-elapsed);
   $("time").textContent=(remain/1000).toFixed(1);
   $("speedReadout").textContent=`Velocidade ${currentSpeed().toFixed(2)}× • ${hits} acertos`;
   if(remain<=0)beginEndingPhase();
@@ -791,15 +905,15 @@ function useRevive(){
   u.shop.revive=Number(u.shop.revive)-1;users[playerKey]=u;saveUsers(users);
   $("resultOverlay").classList.add("hidden");$("game").classList.remove("hidden");
   reviveMultiplier=2;gameWon=false;score=0;hits=0;window.pkHitNotes=0;window.pkMissNotes=0;window.pkTotalNotes=0;
-  applyPlayerStats();
+  applyPlayerStats(true);
   const countdown=$("reviveCountdown");let n=3;
   if(countdown){countdown.classList.remove("hidden");countdown.textContent=String(n);}
   const tick=()=>{
     n--;
     if(n<=0){
       if(countdown)countdown.classList.add("hidden");
-      clearTimers();clearTiles();running=true;paused=false;endingPhase=false;activeDuration=levels[levelKey].duration;startTime=performance.now();totalPaused=0;lastPointer=0;
-      $("score").textContent="0";$("time").textContent=(activeDuration/1000).toFixed(1);$("speedReadout").textContent="Reviver • 2× recompensa";spawnTile();scheduleSpawn();clockTimer=setInterval(updateClock,80);startAudio();animate();
+      clearTimers();clearTiles();running=true;paused=false;endingPhase=false;activeDuration=pkIsInfinite()?PK_INFINITE_DURATION:levels[levelKey].duration;startTime=performance.now();totalPaused=0;lastPointer=0;
+      $("score").textContent="0";$("time").textContent=pkIsInfinite()?"∞":(activeDuration/1000).toFixed(1);$("speedReadout").textContent=pkIsInfinite()?"∞ Infinito • Reviver • 2× recompensa":"Reviver • 2× recompensa";spawnTile();scheduleSpawn();clockTimer=setInterval(updateClock,80);startAudio();animate();
       return;
     }
     if(countdown)countdown.textContent=String(n);setTimeout(tick,700);
@@ -820,7 +934,12 @@ function toggleVolumePanel(){$("volumePanel").classList.toggle("hidden");applyAu
 
 function startAudio(){
   const selected=currentSong();
-  if(selected&&selected.youtubeId){pkStartYoutubeMusic(selected);return;}
+  if(selected&&selected.youtubeId){
+    pkStopYoutubeMusic();
+    pkStartYoutubeMusic(selected);
+    return;
+  }
+  pkStopYoutubeMusic();
   if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();
   if(audioCtx.state==="suspended")audioCtx.resume();
   if(master)master.disconnect();master=audioCtx.createGain();master.connect(audioCtx.destination);applyAudioVolume();
@@ -843,28 +962,36 @@ function beep(freq,dur){
 
 function startGame(){
   songKey=$("songSelect").value;levelKey=$("levelSelect").value;
+  const modeSelect=document.getElementById("pkModeSelect");
+  infiniteMode=!!modeSelect&&modeSelect.value==="infinite";
   if(typeof pkUnlocked==="function" && !pkUnlocked(levelKey)){ return; }
+  if(infiniteMode&&!currentSong().youtubeId){alert("O modo infinito usa apenas músicas do YouTube.");return;}
+  infiniteStage=1;infiniteStageScore=0;infiniteStageEnding=false;
+  if(infiniteMode&&!currentSong().youtubeId){alert("O modo infinito usa apenas músicas do YouTube.");return;}
+  infiniteStage=1;infiniteStageScore=0;infiniteStageEnding=false;
 
   window.pkHitNotes=0; window.pkMissNotes=0; window.pkTotalNotes=0;
 
-  score=0;hits=0;running=false;paused=false;endingPhase=false;resultRecorded=false;tutorialActive=true;startTime=0;totalPaused=0;lastPointer=0;activeDuration=levels[levelKey].duration;reviveMultiplier=1;gameWon=false;applyPlayerStats();
+  score=0;hits=0;running=false;paused=false;endingPhase=false;resultRecorded=false;tutorialActive=true;startTime=0;totalPaused=0;lastPointer=0;activeDuration=levels[levelKey].duration;reviveMultiplier=1;gameWon=false;applyPlayerStats(false);
   $("score").textContent="0";$("time").textContent=(levels[levelKey].duration/1000).toFixed(1);$("speedReadout").textContent="Tutorial";
   $("pauseOverlay").classList.add("hidden");$("resultOverlay").classList.add("hidden");$("menu").classList.add("hidden");$("game").classList.remove("hidden");
   $("tutorialOverlay").classList.remove("hidden");
   $("tutorialDifficulty").textContent=`${levels[levelKey].label} • ${currentSong().title.split(" — ")[0]}`;
-  $("tutorialSpeed").textContent=`Começa suave e acelera depois dos primeiros 5 acertos. Máximo desta dificuldade: ${levels[levelKey].speed.toFixed(2)}×`;
+  $("tutorialSpeed").textContent=pkIsInfinite()?`Modo infinito: você joga até perder toda a vida. A dificuldade base é ${levels[levelKey].label}, com máximo de ${levels[levelKey].speed.toFixed(2)}×.`:`Começa suave e acelera depois dos primeiros 5 acertos. Máximo desta dificuldade: ${levels[levelKey].speed.toFixed(2)}×`;
   $("volumeSongLink").href=currentSong().youtube;
   $("volumeSongLink").textContent=`Ouvir referência: ${currentSong().title}`;
   clearTimers();clearTiles();stopAudio();
-  $("songHud").textContent=`${levels[levelKey].label} • ${currentSong().title.split(" — ")[0]}`;
+  $("songHud").textContent=`${pkIsInfinite()?"∞ Infinito • ":""}${levels[levelKey].label} • ${currentSong().title.split(" — ")[0]}`;
 }
 
 function beginActualGame(){
   if(!tutorialActive)return;
   tutorialActive=false;$("tutorialOverlay").classList.add("hidden");
-  score=0;hits=0;running=true;endingPhase=false;paused=false;startTime=performance.now();totalPaused=0;lastPointer=0;activeDuration=levels[levelKey].duration;reviveMultiplier=1;gameWon=false;applyPlayerStats();
-  $("score").textContent="0";$("time").textContent=(levels[levelKey].duration/1000).toFixed(1);$("speedReadout").textContent="Preparando...";
-  clearTimers();clearTiles();spawnTile();scheduleSpawn();clockTimer=setInterval(updateClock,80);startAudio();animate();
+  score=0;hits=0;running=true;endingPhase=false;paused=false;startTime=performance.now();totalPaused=0;lastPointer=0;activeDuration=pkIsInfinite()?PK_INFINITE_DURATION:levels[levelKey].duration;reviveMultiplier=1;gameWon=false;applyPlayerStats(true);
+  $("score").textContent="0";$("time").textContent=pkIsInfinite()?"∞":(levels[levelKey].duration/1000).toFixed(1);$("speedReadout").textContent=pkIsInfinite()?pkInfiniteStageText()+" • Preparando...":"Preparando...";
+  clearTimers();clearTiles();spawnTile();scheduleSpawn();clockTimer=setInterval(updateClock,80);startAudio();
+  if(pkIsInfinite()&&pkYoutubePlayer&&typeof pkYoutubePlayer.setPlaybackRate==="function"){try{pkYoutubePlayer.setPlaybackRate(1);}catch(e){}}
+  animate();
 }
 
 function resumeAudioNow(){
