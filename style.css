@@ -43,3 +43,25 @@ button,input,select{font:inherit}button{cursor:pointer;touch-action:manipulation
 .shopRefresh{margin:2px 0 0;opacity:.72;font-size:.8rem}.reviveCountdown{position:fixed;inset:0;z-index:50;display:grid;place-items:center;font-size:120px;font-weight:900;background:rgba(2,5,12,.72);text-shadow:0 0 30px rgba(255,255,255,.35)}.reviveCountdown.hidden{display:none}
 
 @media(max-width:700px){.hud{gap:6px}.vitalHud{min-width:72px!important}.vitalHud b{font-size:8px!important}.vitalHud span{font-size:12px!important}.vitalBar{height:6px}.shopCard{padding:18px}.shopItem{align-items:flex-start}.shopItem div{min-width:0}.shopBuy{min-height:44px}.shopItems{max-height:55vh}}
+
+
+/* Área de código exclusiva do administrador */
+.adminCodePanel{
+  margin-top:18px;padding:18px;border-radius:18px;
+  background:rgba(10,12,20,.96);border:1px solid rgba(255,255,255,.12);
+  box-shadow:0 18px 50px rgba(0,0,0,.35);
+}
+.adminCodeHeader{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;margin-bottom:14px}
+.adminCodeHeader h3{margin:6px 0 4px;font-size:20px}
+.adminCodeBadge{font-size:11px;font-weight:800;letter-spacing:.12em;opacity:.7}
+.adminCodeBtn{margin-top:10px}
+.adminCloseBtn{white-space:nowrap}
+.adminCodeList{display:grid;gap:12px}
+.adminCodeCard{padding:14px;border-radius:14px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.09)}
+.adminCodeTitle{font-weight:800;font-size:15px;margin-bottom:5px}
+.adminCodeCard p{margin:0 0 10px;line-height:1.45;opacity:.82;font-size:13px}
+.adminCodeCard pre{margin:0;overflow:auto;max-height:280px;padding:12px;border-radius:10px;background:#070910;border:1px solid rgba(255,255,255,.08);font:12px/1.5 Consolas,Monaco,monospace;white-space:pre}
+.adminCodeCard code{font:inherit}
+@media(max-width:700px){
+  .adminCodeHeader{flex-direction:column}.adminCloseBtn{width:100%}.adminCodePanel{padding:13px}.adminCodeCard pre{font-size:11px}
+}
