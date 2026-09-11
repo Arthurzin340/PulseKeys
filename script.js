@@ -613,7 +613,7 @@ $("registerBtn").addEventListener("pointerdown",e=>{
   e.preventDefault();
   const name=$("registerName").value.trim(),pass=$("registerPassword").value.trim();
   if(!name){alert("Digite um nome.");return}
-  if(!/^\d{4,6}$/.test(pass)){alert("A senha deve ter de 4 a 6 números.");return}
+  if(!/^\d{4,10}$/.test(pass)){alert("A senha deve ter de 4 a 10 caracteres, usando apenas letras e números.");return}
   const users=getUsers(),key=userKey(name);
   if(users[key]){alert("Esse nome já está cadastrado. Use a aba Entrar.");return}
   users[key]={name,password:pass,best:0};saveUsers(users);
