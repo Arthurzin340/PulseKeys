@@ -622,16 +622,44 @@ $("registerBtn").addEventListener("pointerdown",e=>{
   enterGameMenu();
 });
 
-$("loginBtn").addEventListener("pointerdown",e=>{
-  e.preventDefault();
-  const name=$("loginName").value.trim(),pass=$("loginPassword").value.trim();
-  const users=getUsers(),key=userKey(name);
-  if(!users[key]||users[key].password!==pass){$("loginInfo").textContent="Nome ou senha incorretos.";return}
-  player=users[key].name;playerKey=key;
-  localStorage.setItem("pulseKeysPlayer",player);localStorage.setItem("pulseKeysPlayerKey",playerKey);
-  $("loginInfo").textContent="";enterGameMenu();
-});
+// $("loginBtn").addEventListener("pointerdown",e=>{
+//   e.preventDefault();
+//   const name=$("loginName").value.trim(),pass=$("loginPassword").value.trim();
+//   const users=getUsers(),key=userKey(name);
+//   if(!users[key]||users[key].password!==pass){$("loginInfo").textContent="Nome ou senha incorretos.";return}
+//   player=users[key].name;playerKey=key;
+//   localStorage.setItem("pulseKeysPlayer",player);localStorage.setItem("pulseKeysPlayerKey",playerKey);
+//   $("loginInfo").textContent="";enterGameMenu();
+// });
+function doLogin(e){
+  if(e){
+    e.preventDefault();
+    e.stopPropagation();
+  }
 
+  const name=$("loginName").value.trim();
+  const pass=$("loginPassword").value.trim();
+
+  const users=getUsers();
+  const key=userKey(name);
+
+  if(!users[key]||users[key].password!==pass){
+    $("loginInfo").textContent="Nome ou senha incorretos.";
+    return;
+  }
+
+  player=users[key].name;
+  playerKey=key;
+
+  localStorage.setItem("pulseKeysPlayer",player);
+  localStorage.setItem("pulseKeysPlayerKey",playerKey);
+
+  $("loginInfo").textContent="";
+  enterGameMenu();
+}
+
+$("loginBtn").addEventListener("pointerdown",doLogin,{passive:false});
+$("loginBtn").addEventListener("click",doLogin,{passive:false});
 $("levelSelect").addEventListener("change",()=>{levelKey=$("levelSelect").value;updatePlaylist()});
 $("songSelect").addEventListener("change",()=>{songKey=$("songSelect").value});
 $("startBtn").addEventListener("pointerdown",e=>{e.preventDefault();startGame()});
