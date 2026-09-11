@@ -613,7 +613,10 @@ $("registerBtn").addEventListener("pointerdown",e=>{
   e.preventDefault();
   const name=$("registerName").value.trim(),pass=$("registerPassword").value.trim();
   if(!name){alert("Digite um nome.");return}
-  if(!/^\d{4,10}$/.test(pass)){alert("A senha deve ter de 4 a 10 caracteres, usando apenas letras e números.");return}
+  if(!/^[a-zA-Z0-9]{4,10}$/.test(pass)){
+  alert("A senha deve ter de 4 a 10 caracteres, usando apenas letras e números.");
+  return;
+}
   const users=getUsers(),key=userKey(name);
   if(users[key]){alert("Esse nome já está cadastrado. Use a aba Entrar.");return}
   users[key]={name,password:pass,best:0};saveUsers(users);
@@ -638,7 +641,7 @@ function doLogin(e){
   }
 
   const name=$("loginName").value.trim();
-  const pass=$("loginPassword").value.trim();
+  const pass = $("registerPassword").value;
 
   const users=getUsers();
   const key=userKey(name);
@@ -671,7 +674,7 @@ $("againBtn").addEventListener("pointerdown",e=>{e.preventDefault();if(!pkIsInfi
 $("resultLobbyBtn").addEventListener("pointerdown",e=>{e.preventDefault();goToLobby()});
 $("muteBtn").addEventListener("pointerdown",e=>{e.preventDefault();toggleMute()});
 $("volumeBtn").addEventListener("pointerdown",e=>{e.preventDefault();toggleVolumePanel()});
-$("volumeRange").addEventListener("input",e=>setVolume(Number(e.target.value)));
+$("volumeRange").addEventListener("input",e=>setVolume(Number, Text(e.target.value)));
 $("shopBtn").addEventListener("pointerdown",e=>{e.preventDefault();openShop()});
 $("reviveBtn").addEventListener("pointerdown",e=>{e.preventDefault();useRevive()});
 $("closeShopBtn").addEventListener("pointerdown",e=>{e.preventDefault();closeShop()});
