@@ -2,7 +2,7 @@ const $=id=>document.getElementById(id);
 
 let player=localStorage.getItem("pulseKeysPlayer")||"";
 let playerKey=localStorage.getItem("pulseKeysPlayerKey")||"";
-let songKey="neon",levelKey="noob";
+let songKey="neon",levelKey="medium";
 let score=0,hits=0,running=false,paused=false,endingPhase=false,startTime=0,totalPaused=0,pausedAt=0,activeDuration=0;
 let spawnTimer=null,clockTimer=null,melodyTimer=null,raf=null;
 let muted=false,audioCtx=null,master=null,lastPointer=0,melodyIndex=0,resultRecorded=false;
@@ -97,9 +97,18 @@ function pkInfiniteStageSpeed(stage){
   if(stage===3)return 2;
   if(stage===4)return 2.5;
   if(stage===5)return 3.5;
-  if(stage===6)return 4;
-  return 4+(stage-6);
+  const offset=stage-6;
+  const block=Math.floor(offset/5);
+  const position=offset%5;
+  return 4+block+(position*0.5);
 }
+function pkInfiniteDifficultyFactor(){
+  return ({noob:0.36,medium:0.62,hard:0.90,insane:1.38,marcus:2.50}[levelKey]||0.62);
+}
+function pkInfiniteStageHasTimer(){
+  return levelKey==='noob' && infiniteStage===1;
+}
+const PK_INFINITE_NOOB_TEST_TIME=30000;
 function pkInfiniteLabel(){return `∞ Infinito • ${levels[levelKey].label} • Estágio ${infiniteStage}`;}
 function pkEnsureModeUI(){
   if(document.getElementById("pkModeBox"))return;
@@ -604,15 +613,12 @@ $("registerBtn").addEventListener("pointerdown",e=>{
   e.preventDefault();
   const name=$("registerName").value.trim(),pass=$("registerPassword").value.trim();
   if(!name){alert("Digite um nome.");return}
-  if(pass.length<4 || pass.length>10){alert("A senha deve ter de 4 a 10 caracteres.");return}
+  if(!/^\d{4,6}$/.test(pass)){alert("A senha deve ter de 4 a 6 números.");return}
   const users=getUsers(),key=userKey(name);
   if(users[key]){alert("Esse nome já está cadastrado. Use a aba Entrar.");return}
   users[key]={name,password:pass,best:0};saveUsers(users);
   player=users[key].name;playerKey=key;
   localStorage.setItem("pulseKeysPlayer",player);localStorage.setItem("pulseKeysPlayerKey",playerKey);
-  levelKey="noob";
-  const levelSelect=document.getElementById("levelSelect");
-  if(levelSelect) levelSelect.value="noob";
   enterGameMenu();
 });
 
@@ -633,7 +639,7 @@ $("pauseBtn").addEventListener("pointerdown",e=>{e.preventDefault();togglePause(
 $("resumeBtn").addEventListener("pointerdown",e=>{e.preventDefault();resumeGame()});
 $("restartPausedBtn").addEventListener("pointerdown",e=>{e.preventDefault();startGame()});
 $("lobbyPausedBtn").addEventListener("pointerdown",e=>{e.preventDefault();goToLobby()});
-$("againBtn").addEventListener("pointerdown",e=>{e.preventDefault();startGame()});
+$("againBtn").addEventListener("pointerdown",e=>{e.preventDefault();if(!pkIsInfinite())startGame()});
 $("resultLobbyBtn").addEventListener("pointerdown",e=>{e.preventDefault();goToLobby()});
 $("muteBtn").addEventListener("pointerdown",e=>{e.preventDefault();toggleMute()});
 $("volumeBtn").addEventListener("pointerdown",e=>{e.preventDefault();toggleVolumePanel()});
@@ -645,52 +651,48 @@ document.getElementById("adminCodeClose")?.addEventListener("pointerdown",e=>{e.
 $("tutorialOverlay").addEventListener("pointerdown",e=>{e.preventDefault();if(tutorialActive)beginActualGame()});
 
 function pkInfiniteStageText(){return `∞ Infinito • Estágio ${infiniteStage} • ${pkInfiniteStageSpeed(infiniteStage)}× • ${infiniteStageScore}/${PK_INFINITE_STAGE_TARGET} pts`;}
-function pkShowInfiniteStageMessage(){
-  const message=document.getElementById("resultText"),tier=document.getElementById("scoreTier"),overlay=document.getElementById("resultOverlay");
+function pkInfiniteRewardMultiplier(){return pkInfiniteStageSpeed(infiniteStage);}
+function pkShowInfiniteStageMessage(completedStage, rewardCoins, nextStage){
+  const message=document.getElementById("resultText"),tier=document.getElementById("scoreTier"),overlay=document.getElementById("resultOverlay"),again=document.getElementById("againBtn"),lobby=document.getElementById("resultLobbyBtn"),finalScore=document.getElementById("finalScore");
   if(!message||!tier||!overlay)return;
-  if(infiniteStage===6){
-    tier.textContent="Parabéns!";
-    message.textContent="Parabéns, você finalizou todos os cinco estágios. Você está pronto para começar os próximos cinco estágios, mais difíceis do que o outro. O último estágio concluído foi 3.5× de velocidade. Agora começa o estágio 6 em 4×.";
-  }else{tier.textContent=`Estágio ${infiniteStage}`;message.textContent=`Estágio ${infiniteStage}: velocidade ${pkInfiniteStageSpeed(infiniteStage)}×. Continue jogando!`;}
+  const mult=pkInfiniteStageSpeed(completedStage);
+  tier.textContent=`Estágio ${completedStage} concluído!`;
+  if(finalScore)finalScore.textContent=String(rewardCoins);
+  message.innerHTML=`<div style="font-size:1.05em;line-height:1.5"><b>Parabéns, você passou do ${completedStage}º estágio!</b><br>Seu ganho deste estágio foi <b>${rewardCoins}</b> moedas.<br>Multiplicador: <b>${mult}×</b>.<br><br>${completedStage===5?`Você finalizou todos os cinco estágios. Você está pronto para começar os próximos cinco estágios, mais difíceis do que os anteriores!<br>O último foi <b>3,5×</b>. O próximo será <b>4×</b>.`:`O próximo estágio será <b>${pkInfiniteStageSpeed(nextStage)}×</b>.`}</div>`;
+  if(again){again.textContent=`▶️ Próximo estágio (${nextStage})`;again.classList.remove("hidden");again.onclick=null;again.addEventListener("pointerdown",pkNextInfiniteFromOverlay,{once:true});}
+  if(lobby){lobby.textContent="🏠 Voltar ao lobby";lobby.classList.remove("hidden");}
   overlay.classList.remove("hidden");
-  setTimeout(()=>overlay.classList.add("hidden"),2600);
+}
+function pkNextInfiniteFromOverlay(e){
+  e&&e.preventDefault();
+  const overlay=document.getElementById("resultOverlay"); if(overlay)overlay.classList.add("hidden");
+  if(!running||!pkIsInfinite())return;
+  infiniteStageEnding=false;
+  startTime=performance.now();
+  totalPaused=0;
+  activeDuration=pkInfiniteStageHasTimer()?PK_INFINITE_NOOB_TEST_TIME:PK_INFINITE_DURATION;
+  if(spawnTimer){clearTimeout(spawnTimer);spawnTimer=null;}
+  clearTiles();
+  if(pkYoutubePlayer&&typeof pkYoutubePlayer.setPlaybackRate==="function"){try{pkYoutubePlayer.setPlaybackRate(Math.min(2,pkInfiniteStageSpeed(infiniteStage)));}catch(e){}}
+  spawnTile();scheduleSpawn();
 }
 function pkAdvanceInfiniteStage(){
   if(!pkIsInfinite()||!running)return;
-  infiniteStageEnding=false;infiniteStage++;infiniteStageScore=0;clearTiles();
+  const completedStage=infiniteStage;
+  const rewardCoins=Math.round(infiniteStageScore*pkInfiniteRewardMultiplier());
+  const users=getUsers(),u=users[playerKey];
+  if(u){
+    refreshShopIfNeeded(u);
+    u.coins=Number(u.coins||0)+rewardCoins;
+    users[playerKey]=u;
+    saveUsers(users);
+  }
+  infiniteStage++;
+  infiniteStageScore=0;
+  infiniteStageEnding=false;
+  clearTiles();
   if(spawnTimer){clearTimeout(spawnTimer);spawnTimer=null;}
-  pkShowInfiniteStageMessage();
-  setTimeout(()=>{
-    if(!running||paused||!pkIsInfinite())return;
-    if(pkYoutubePlayer&&typeof pkYoutubePlayer.setPlaybackRate==="function"){
-      try{pkYoutubePlayer.setPlaybackRate(Math.min(2,pkInfiniteStageSpeed(infiniteStage)));}catch(e){}
-    }
-    spawnTile();scheduleSpawn();
-  },2650);
-}
-function pkInfiniteStageText(){return `∞ Infinito • Estágio ${infiniteStage} • ${pkInfiniteStageSpeed(infiniteStage)}× • ${infiniteStageScore}/${PK_INFINITE_STAGE_TARGET} pts`;}
-function pkShowInfiniteStageMessage(){
-  const message=document.getElementById("resultText"),tier=document.getElementById("scoreTier"),overlay=document.getElementById("resultOverlay");
-  if(!message||!tier||!overlay)return;
-  if(infiniteStage===6){
-    tier.textContent="Parabéns!";
-    message.textContent="Parabéns, você finalizou todos os cinco estágios. Você está pronto para começar os próximos cinco estágios, mais difíceis do que o outro. O último estágio concluído foi 3.5× de velocidade. Agora começa o estágio 6 em 4×.";
-  }else{tier.textContent=`Estágio ${infiniteStage}`;message.textContent=`Estágio ${infiniteStage}: velocidade ${pkInfiniteStageSpeed(infiniteStage)}×. Continue jogando!`;}
-  overlay.classList.remove("hidden");
-  setTimeout(()=>overlay.classList.add("hidden"),2600);
-}
-function pkAdvanceInfiniteStage(){
-  if(!pkIsInfinite()||!running)return;
-  infiniteStageEnding=false;infiniteStage++;infiniteStageScore=0;clearTiles();
-  if(spawnTimer){clearTimeout(spawnTimer);spawnTimer=null;}
-  pkShowInfiniteStageMessage();
-  setTimeout(()=>{
-    if(!running||paused||!pkIsInfinite())return;
-    if(pkYoutubePlayer&&typeof pkYoutubePlayer.setPlaybackRate==="function"){
-      try{pkYoutubePlayer.setPlaybackRate(Math.min(2,pkInfiniteStageSpeed(infiniteStage)));}catch(e){}
-    }
-    spawnTile();scheduleSpawn();
-  },2650);
+  pkShowInfiniteStageMessage(completedStage,rewardCoins,infiniteStage);
 }
 function applyPlayerStats(consumeShield=false){
   const u=shopState(),stats=upgradeStats(u);
@@ -715,7 +717,7 @@ function takeDamage(amount,pointsLoss=amount){
   let remaining=amount;
   const absorbed=Math.min(shield,remaining);shield-=absorbed;remaining-=absorbed;
   health=Math.max(0,health-remaining);
-  score=Math.max(0,score-Math.max(0,Number(pointsLoss)||0));
+  if(!pkIsInfinite()) if(!pkIsInfinite()) score=Math.max(0,score-Math.max(0,Number(pointsLoss)||0));
   updateLifeHud();$("score").textContent=score;
   if(health<=0)die();
 }
@@ -782,9 +784,6 @@ function pkOpenAdminCode(){
 function pkCloseAdminCode(){document.getElementById("adminCodePanel")?.classList.add("hidden");}
 
 function enterGameMenu(){
-  levelKey="noob";
-  const levelSelect=document.getElementById("levelSelect");
-  if(levelSelect) levelSelect.value="noob";
   $("registerPanel").classList.add("hidden");$("loginPanel").classList.add("hidden");$("gameSettings").classList.remove("hidden");
   $("welcomeText").textContent=`Olá, ${player}! Escolha primeiro a dificuldade e depois uma música.`;
   updateBest();updatePlaylist();renderColorGuide();pkEnsureModeUI();pkSyncModeUI();pkRenderAdminCode();
@@ -824,7 +823,7 @@ function ramp(){
   return Math.min(1.28,0.42+0.58*Math.max(timeRamp,early)+(clickRamp-1)*0.65);
 }
 function currentSpeed(){
-  if(pkIsInfinite())return levels[levelKey].speed*pkInfiniteStageSpeed(infiniteStage);
+  if(pkIsInfinite())return pkInfiniteDifficultyFactor()*pkInfiniteStageSpeed(infiniteStage);
   return levels[levelKey].speed*ramp();
 }
 function currentSpawn(){
@@ -904,8 +903,15 @@ function updateClock(){
   if(!running||paused)return;
   const elapsed=performance.now()-startTime-totalPaused;
   if(pkIsInfinite()){
-    $("time").textContent="∞";
-    $("speedReadout").textContent=pkInfiniteStageText()+` • ${hits} acertos`;
+    if(pkInfiniteStageHasTimer()){
+      const remain=Math.max(0,PK_INFINITE_NOOB_TEST_TIME-elapsed);
+      $("time").textContent=(remain/1000).toFixed(1);
+      $("speedReadout").textContent=pkInfiniteStageText()+` • ${hits} acertos • teste`;
+      if(remain<=0)beginEndingPhase();
+    }else{
+      $("time").textContent="∞";
+      $("speedReadout").textContent=pkInfiniteStageText()+` • ${hits} acertos`;
+    }
     return;
   }
   const remain=Math.max(0,(activeDuration||levels[levelKey].duration)-elapsed);
@@ -1002,8 +1008,6 @@ function startGame(){
   if(typeof pkUnlocked==="function" && !pkUnlocked(levelKey)){ return; }
   if(infiniteMode&&!currentSong().youtubeId){alert("O modo infinito usa apenas músicas do YouTube.");return;}
   infiniteStage=1;infiniteStageScore=0;infiniteStageEnding=false;
-  if(infiniteMode&&!currentSong().youtubeId){alert("O modo infinito usa apenas músicas do YouTube.");return;}
-  infiniteStage=1;infiniteStageScore=0;infiniteStageEnding=false;
 
   window.pkHitNotes=0; window.pkMissNotes=0; window.pkTotalNotes=0;
 
@@ -1022,8 +1026,8 @@ function startGame(){
 function beginActualGame(){
   if(!tutorialActive)return;
   tutorialActive=false;$("tutorialOverlay").classList.add("hidden");
-  score=0;hits=0;running=true;endingPhase=false;paused=false;startTime=performance.now();totalPaused=0;lastPointer=0;activeDuration=pkIsInfinite()?PK_INFINITE_DURATION:levels[levelKey].duration;reviveMultiplier=1;gameWon=false;applyPlayerStats(true);
-  $("score").textContent="0";$("time").textContent=pkIsInfinite()?"∞":(levels[levelKey].duration/1000).toFixed(1);$("speedReadout").textContent=pkIsInfinite()?pkInfiniteStageText()+" • Preparando...":"Preparando...";
+  score=0;hits=0;running=true;endingPhase=false;paused=false;startTime=performance.now();totalPaused=0;lastPointer=0;activeDuration=pkIsInfinite()?(pkInfiniteStageHasTimer()?PK_INFINITE_NOOB_TEST_TIME:PK_INFINITE_DURATION):levels[levelKey].duration;reviveMultiplier=1;gameWon=false;applyPlayerStats(true);
+  $("score").textContent="0";$("time").textContent=pkIsInfinite()?(pkInfiniteStageHasTimer()?(PK_INFINITE_NOOB_TEST_TIME/1000).toFixed(1):"∞"):(levels[levelKey].duration/1000).toFixed(1);$("speedReadout").textContent=pkIsInfinite()?pkInfiniteStageText()+" • Preparando...":"Preparando...";
   clearTimers();clearTiles();spawnTile();scheduleSpawn();clockTimer=setInterval(updateClock,80);startAudio();
   if(pkIsInfinite()&&pkYoutubePlayer&&typeof pkYoutubePlayer.setPlaybackRate==="function"){try{pkYoutubePlayer.setPlaybackRate(1);}catch(e){}}
   animate();
