@@ -611,7 +611,7 @@ $("loginTab").addEventListener("pointerdown",e=>{e.preventDefault();showTab("log
 
 $("registerBtn").addEventListener("pointerdown",e=>{
   e.preventDefault();
-  const name=$("registerName").value.trim(),pass=$("registerPassword").value.trim();
+  const name=$("registerName").value.trim(),pass=$("registerPassword").value);
   if(!name){alert("Digite um nome.");return}
   if(!/^[a-zA-Z0-9]{4,10}$/.test(pass)){
   alert("A senha deve ter de 4 a 10 caracteres, usando apenas letras e números.");
