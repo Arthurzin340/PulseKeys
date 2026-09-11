@@ -641,7 +641,7 @@ function doLogin(e){
   }
 
   const name=$("loginName").value.trim();
-  const pass = $("registerPassword").value;
+  const pass = $("loginPassword").value;
 
   const users=getUsers();
   const key=userKey(name);
